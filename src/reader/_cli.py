@@ -70,13 +70,7 @@ def make_log_verbose(expose_value=False, initial=0):
     def log_verbose(fn):
         @click.option('-v', '--verbose', count=True)
         @functools.wraps(fn)
-        def wrapper(*args, **kwargs):
-            setup_logging(kwargs['verbose'] + initial)
-            if not expose_value:
-                del kwargs['verbose']
-            return fn(*args, **kwargs)
-
-        return wrapper
+        pass
 
     return log_verbose
 
@@ -86,31 +80,7 @@ log_verbose = make_log_verbose()
 
 def log_command(fn):
     @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        ctx = click.get_current_context()
-        params = []
-        while ctx:
-            params.append((ctx.info_name, ctx.params))
-            ctx = ctx.parent
-
-        log.info(
-            "command started: %s", ' '.join(f"{n} {p}" for n, p in reversed(params))
-        )
-
-        try:
-            rv = fn(*args, **kwargs)
-            log.info("command finished successfully")
-            return rv
-        except Exception as e:
-            log.critical(
-                "command failed due to unexpected error: %s; traceback follows",
-                e,
-                exc_info=True,
-            )
-            # always raise, even if it's ReaderError (it could be due to a bug)
-            raise
-
-    return wrapper
+    pass
 
 
 def pass_reader(fn):
@@ -131,19 +101,7 @@ class MapParamType(click.ParamType):
     name = 'key=value,...'
 
     def convert(self, value, param, ctx):
-        if isinstance(value, dict):
-            return value
-        rv = {}
-        for pair in value.split(','):
-            key, sep, value = pair.partition('=')
-            if not sep:
-                self.fail(f"{pair!r} is not a key=value pair")
-            key = key.strip()
-            value = value.strip()
-            if not key:
-                self.fail(f"{pair!r} must have a key")
-            rv[key] = value
-        return rv
+        pass
 
 
 @click.group(context_settings=dict(auto_envvar_prefix=app_name.upper()))
@@ -236,7 +194,7 @@ def add(reader, url, update):
 @pass_reader
 def delete(reader, url):
     """Delete an existing feed."""
-    reader.delete_feed(url)
+    pass
 
 
 def red(text):
@@ -379,8 +337,7 @@ def list_cmd():
 @pass_reader
 def feeds(reader):
     """List all the feeds."""
-    for feed in reader.get_feeds():
-        click.echo(feed.url)
+    pass
 
 
 @list_cmd.command()
@@ -393,8 +350,7 @@ def entries(reader):
         <feed URL> <entry link or id>
 
     """
-    for entry in reader.get_entries():
-        click.echo(f"{entry.feed.url} {entry.link or entry.id}")
+    pass
 
 
 @cli.group()
@@ -406,21 +362,21 @@ def search():
 @pass_reader
 def search_status(reader):
     """Check search status."""
-    click.echo(f"search: {'enabled' if reader.is_search_enabled() else 'disabled'}")
+    pass
 
 
 @search.command('enable')
 @pass_reader
 def search_enable(reader):
     """Enable search."""
-    reader.enable_search()
+    pass
 
 
 @search.command('disable')
 @pass_reader
 def search_disable(reader):
     """Disable search."""
-    reader.disable_search()
+    pass
 
 
 @search.command('update')
@@ -429,7 +385,7 @@ def search_disable(reader):
 @pass_reader
 def search_update(reader):
     """Update the search index."""
-    reader.update_search()
+    pass
 
 
 @search.command('entries')

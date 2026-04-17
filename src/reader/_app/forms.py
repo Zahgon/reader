@@ -16,41 +16,19 @@ from reader._types import tag_filter_argument
 class TagFilterField(StringField):
 
     def process_formdata(self, valuelist):
-        if not valuelist:
-            return
-        value = valuelist[0]
-        if '[' not in value:
-            value = f'[{value}]'
-        try:
-            data = yaml.safe_load(value)
-        except yaml.error.MarkedYAMLError as e:
-            raise ValueError(f"invalid YAML: {e.problem or e.context}") from e
-        tag_filter_argument(data)
-        self.data = data
+        pass
 
     def _value(self):
-        if self.raw_data:
-            return self.raw_data[0]
-        if not self.data:
-            return ''
-        return yaml.safe_dump(self.data, default_flow_style=True).rstrip()
+        pass
 
 
 class HiddenEntryField(HiddenField):
 
     def process_formdata(self, valuelist):
-        if not valuelist:
-            return
-        value = valuelist[0]
-        feed, _, id = value.partition('\0')
-        self.data = feed, id
+        pass
 
     def _value(self):
-        if self.raw_data:
-            return self.raw_data[0]
-        if not self.data:
-            return None
-        return '\0'.join(self.data)
+        pass
 
 
 class PresetsMixin:
@@ -60,45 +38,15 @@ class PresetsMixin:
 
     @property
     def presets(self):
-        form_args = {}
-        form_preset_args = {}
-        for field in self:
-            if field.name in self.PRESETS_EXCLUDE:
-                continue
-            value = get_formdata(field)
-            form_args[field.name] = value
-            if field.name in self.PRESETS_INCLUDE:
-                form_preset_args[field.name] = value
-
-        for name, args_raw in self.PRESETS.items():
-            args = {}
-            preset_args = {}
-            for field in self:
-                if field.name in self.PRESETS_EXCLUDE:
-                    continue
-                if field.name in self.PRESETS_INCLUDE:
-                    value = args_raw.get(field.name, field.default)
-                    preset_args[field.name] = value
-                else:
-                    value = form_args[field.name]
-
-                if value and (not field.default or value != field.default):
-                    args[field.name] = value
-
-            yield Preset(name, args, preset_args == form_preset_args)
+        pass
 
     @property
     def active_presets(self):
-        return [p for p in self.presets if p.active]
+        pass
 
     @property
     def args(self):
-        rv = {}
-        for field in self:
-            value = get_formdata(field)
-            if value and (not field.default or value != field.default):
-                rv[field.name] = value
-        return rv
+        pass
 
     def replace(self, **kwargs):
         return type(self)(data=self.data, **kwargs)
@@ -112,16 +60,7 @@ class Preset:
 
 
 def get_formdata(field):
-    try:
-        return field._value()
-    except AttributeError:
-        values = [option._value() for option in field if option.checked]
-        if values:
-            value, *rest = values
-            if rest:
-                raise NotImplementedError("multiple choices not supported") from None
-            return value
-        return field.default
+    pass
 
 
 def radio_field(*args, choices, **kwargs):

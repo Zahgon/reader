@@ -90,9 +90,7 @@ class Changes:
 
 
 def change_factory(row: tuple[Any, ...]) -> Change:
-    sequence, feed, id, key, action = row
-    resource = tuple(filter(bool, (feed, id)))
-    return Change(Action(action), sequence, resource, key or None)
+    pass
 
 
 def change_to_dict(change: Change) -> dict[str, Any]:

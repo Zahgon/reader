@@ -142,9 +142,7 @@ class SessionFactory:
             contextmanager(SessionWrapper):
 
         """
-        if self.session:
-            return nullcontext(self.session)
-        return self()
+        pass
 
     @contextmanager
     def persistent(self) -> Iterator[SessionWrapper]:

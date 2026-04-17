@@ -171,14 +171,7 @@ class Parser:
         Takes one argument and does not raise exceptions.
 
         """
-        try:
-            context = self.retrieve(feed.url, feed.caching_info)
-            return RetrieveResult(feed, context)
-        except Exception as e:
-            # pass around *all* exception types,
-            # unhandled exceptions get swallowed by the thread otherwise
-            log.debug("retrieve() exception, traceback follows", exc_info=True)
-            return RetrieveResult(feed, e)
+        pass
 
     def retrieve(
         self, url: str, caching_info: JSONType | None = None
@@ -198,23 +191,7 @@ class Parser:
             ParseError
 
         """
-        parser = self.get_parser_by_url(url)
-
-        accept: str | None
-        if not parser:
-            accept = unparse_accept_header(
-                (mime_type, quality)
-                for mime_type, parsers in self.parsers_by_mime_type.items()
-                for quality, _ in parsers
-            )
-        else:
-            # URL parsers get the default session / requests Accept (*/*);
-            # later, we may use parser.accept, if it exists, but YAGNI
-            accept = None
-
-        retriever = self.get_retriever(url)
-
-        return self._retrieve(retriever, url, caching_info, accept)
+        pass
 
     @contextmanager
     def _retrieve(
@@ -224,31 +201,7 @@ class Parser:
         caching_info: JSONType | None,
         accept: str | None,
     ) -> Iterator[RetrievedFeed[Any]]:
-        with wrap_exceptions(url, 'during retriever'):
-            context = retriever(url, caching_info, accept)
-            with context as feed:
-                if not isinstance(feed, RetrievedFeed):
-                    feed = RetrievedFeed(feed)
-
-                if not feed.slow_to_read:
-                    yield feed
-                    return
-
-                # Ensure we read everything *before* yielding the response,
-                # i.e. __enter__() does most of the work.
-                #
-                # Gives a ~20% speed improvement over yielding response.raw
-                # when updating many feeds in parallel,
-                # with a 2-8% increase in memory usage:
-                # https://github.com/lemon24/reader/issues/261#issuecomment-956303210
-                #
-                # SpooledTemporaryFile() is just as fast as TemporaryFile():
-                # https://github.com/lemon24/reader/issues/261#issuecomment-957469041
-
-                with tempfile.TemporaryFile() as temp:
-                    shutil.copyfileobj(feed.resource, temp)
-                    temp.seek(0)
-                    yield feed._replace(resource=temp)
+        pass
 
     def parse_fn(
         self, result: RetrieveResult[F, Any, Exception]
@@ -258,41 +211,7 @@ class Parser:
         Takes one argument and does not raise exceptions.
 
         """
-        feed, context = result
-
-        http_info = None
-        value: ParsedFeed | None | Exception
-        try:
-            if isinstance(context, Exception):
-                raise context
-
-            with context as retrieved:
-                http_info = retrieved.http_info
-                value = self.parse(feed.url, retrieved)
-
-        except ParseError as e:
-            if isinstance(e, NotModified):
-                log.debug("parse_fn(): got not modified")
-                value = None
-            elif e is context:
-                log.debug("parse_fn(): got retrieve error: %s: %s", type(e).__name__, e)
-                value = e
-            else:
-                log.debug("parse_fn(): got parse error: %s: %s", type(e).__name__, e)
-                value = e
-
-            if isinstance(e, RetrieveError):
-                if not http_info:
-                    http_info = e.http_info
-
-        except Exception as e:
-            # pass around *all* exception types,
-            # unhandled exceptions get swallowed by the thread otherwise
-            # (not needed now, but for symmetry with retrieve_fn())
-            log.debug("parse_fn(): got unexpected error: %s: %s", type(e).__name__, e)
-            value = e
-
-        return ParseResult(feed, value, http_info)
+        pass
 
     def parse(self, url: str, retrieved: RetrievedFeed[Any]) -> ParsedFeed:
         """Parse a retrieved feed.
@@ -535,8 +454,4 @@ class Parser:
             (entry data, entry for update) pairs, possibly modified.
 
         """
-        parser, _ = self.get_parser(url, mime_type)
-        if not isinstance(parser, EntryPairsParserType):
-            return pairs
-        with wrap_exceptions(url, "during parser.process_entry_pairs()"):
-            return list(parser.process_entry_pairs(url, pairs))
+        pass

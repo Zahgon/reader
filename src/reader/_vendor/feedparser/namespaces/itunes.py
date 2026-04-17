@@ -38,76 +38,57 @@ class Namespace:
     }
 
     def _start_itunes_author(self, attrs_d):
-        self._start_author(attrs_d)
+        pass
 
     def _end_itunes_author(self):
-        self._end_author()
+        pass
 
     def _end_itunes_category(self):
-        self._end_category()
+        pass
 
     def _start_itunes_name(self, attrs_d):
-        self._start_name(attrs_d)
+        pass
 
     def _end_itunes_name(self):
-        self._end_name()
+        pass
 
     def _start_itunes_email(self, attrs_d):
-        self._start_email(attrs_d)
+        pass
 
     def _end_itunes_email(self):
-        self._end_email()
+        pass
 
     def _start_itunes_subtitle(self, attrs_d):
-        self._start_subtitle(attrs_d)
+        pass
 
     def _end_itunes_subtitle(self):
-        self._end_subtitle()
+        pass
 
     def _start_itunes_summary(self, attrs_d):
-        self._start_summary(attrs_d)
+        pass
 
     def _end_itunes_summary(self):
-        self._end_summary()
+        pass
 
     def _start_itunes_owner(self, attrs_d):
-        self.inpublisher = 1
-        self.push("publisher", 0)
+        pass
 
     def _end_itunes_owner(self):
-        self.pop("publisher")
-        self.inpublisher = 0
-        self._sync_author_detail("publisher")
+        pass
 
     def _end_itunes_keywords(self):
-        for term in self.pop("itunes_keywords").split(","):
-            if term.strip():
-                self._add_tag(term.strip(), "http://www.itunes.com/", None)
+        pass
 
     def _start_itunes_category(self, attrs_d):
-        self._add_tag(attrs_d.get("text"), "http://www.itunes.com/", None)
-        self.push("category", 1)
+        pass
 
     def _start_itunes_image(self, attrs_d):
-        self.push("itunes_image", 0)
-        if attrs_d.get("href"):
-            self._get_context()["image"] = FeedParserDict({"href": attrs_d.get("href")})
-        elif attrs_d.get("url"):
-            self._get_context()["image"] = FeedParserDict({"href": attrs_d.get("url")})
+        pass
 
     _start_itunes_link = _start_itunes_image
 
     def _end_itunes_block(self):
-        value = self.pop("itunes_block", 0)
-        self._get_context()["itunes_block"] = (
-            (value == "yes" or value == "Yes") and 1 or 0
-        )
+        pass
 
     def _end_itunes_explicit(self):
-        value = self.pop("itunes_explicit", 0)
-        # Convert 'yes' -> True, 'clean' to False, and any other value to None
-        # False and None both evaluate as False, so the difference can be ignored
-        # by applications that only need to know if the content is explicit.
-        self._get_context()["itunes_explicit"] = (None, False, True)[
-            (value == "yes" and 2) or value == "clean" or 0
-        ]
+        pass

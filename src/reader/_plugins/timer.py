@@ -138,7 +138,7 @@ class Timer:
             times_by_name.setdefault(call.name, []).append(call.time)
 
         def avg(times):
-            return sum(times) / len(times)
+            pass
 
         fns = [len, sum, min, avg, max]
 

@@ -57,51 +57,7 @@ class FeedsMixin(StorageBase):
 
     @wrap_exceptions()
     def change_feed_url(self, old: str, new: str) -> None:
-        with self.get_db() as db:
-            try:
-                cursor = db.execute(
-                    "UPDATE feeds SET url = :new WHERE url = :old;",
-                    dict(old=old, new=new),
-                )
-            except sqlite3.IntegrityError as e:
-                e_msg = str(e).lower()
-                if "unique constraint failed: feeds.url" in e_msg:
-                    raise FeedExistsError(new) from None
-                raise  # pragma: no cover
-            else:
-                rowcount_exactly_one(cursor, lambda: FeedNotFoundError(old))
-
-            # Some of the fields are not kept from the old feed; details:
-            # https://github.com/lemon24/reader/issues/149#issuecomment-700532183
-            db.execute(
-                """
-                UPDATE feeds
-                SET
-                    updated = NULL,
-                    version = NULL,
-                    caching_info = NULL,
-                    stale = 0,
-                    update_after = NULL,
-                    last_retrieved = NULL,
-                    last_updated = NULL,
-                    last_exception = NULL
-                WHERE url = ?;
-                """,
-                (new,),
-            )
-
-            db.execute(
-                """
-                UPDATE entries
-                SET original_feed = (
-                    SELECT coalesce(sub.original_feed, :old)
-                    FROM entries AS sub
-                    WHERE entries.id = sub.id AND entries.feed = sub.feed
-                )
-                WHERE feed = :new;
-                """,
-                dict(old=old, new=new),
-            )
+        pass
 
     def get_feeds(
         self,
@@ -215,12 +171,7 @@ class FeedsMixin(StorageBase):
 
     @wrap_exceptions()
     def set_feed_stale(self, url: str, stale: bool) -> None:
-        with self.get_db() as db:
-            cursor = db.execute(
-                "UPDATE feeds SET stale = :stale WHERE url = :url;",
-                dict(url=url, stale=stale),
-            )
-            rowcount_exactly_one(cursor, lambda: FeedNotFoundError(url))
+        pass
 
     @wrap_exceptions()
     def update_feed(self, intent: FeedUpdateIntent) -> None:
@@ -271,29 +222,7 @@ class FeedsMixin(StorageBase):
 
 
 def get_feeds_query(filter: FeedFilter, sort: FeedSort) -> tuple[Query, dict[str, Any]]:
-    query = (
-        Query()
-        .SELECT(
-            'url',
-            'updated',
-            'title',
-            'link',
-            'author',
-            'subtitle',
-            'version',
-            'user_title',
-            'added',
-            'last_updated',
-            'last_exception',
-            'updates_enabled',
-            'update_after',
-            'last_retrieved',
-        )
-        .FROM("feeds")
-        .scrolling_window_sort_key(FEED_SORT_KEYS[sort])
-    )
-    context = feed_filter(query, filter)
-    return query, context
+    pass
 
 
 def feed_factory(row: tuple[Any, ...]) -> Feed:

@@ -86,63 +86,19 @@ def load_defaults(ctx, param, value):
     Values come from a TOML section matching auto_envvar_prefix.lower().
 
     """
-    if not value:
-        return
-
-    section_name = ctx.find_root().auto_envvar_prefix.lower()
-
-    try:
-        config = tomllib.load(value)
-    except tomllib.TOMLDecodeError as e:
-        param.type.fail(f"TOML error: {e}", param, ctx)
-
-    if section_name not in config:
-        param.type.fail(f"No [{section_name}] section found", param, ctx)
-
-    default_map = config[section_name]
-    root = ctx.find_root()
-
-    if errors := validate_default_map(root.command, default_map, section_name):
-        sep = '\n* '
-        message = f"\n{sep}{sep.join(errors)}\n"
-        param.type.fail(message, param, ctx)
-
-    root.default_map = default_map
-    return config
+    pass
 
 
 def validate_default_map(command, default_map, section_name):
 
-    def validate(command, map, path=section_name):
-        if map is None:
-            return
-        if not isinstance(map, dict):
-            yield f"{path}: Expected mapping, got: {type(map).__name__}"
-            return
-
-        map = map.copy()
-        for param in command.params:
-            map.pop(param.name, None)
-        for sub_name, sub in getattr(command, 'commands', {}).items():
-            yield from validate(sub, map.pop(sub_name, None), f"{path}.{sub_name}")
-
-        for key in map:
-            yield f"{path}.{key}: No such option or command"
-
-    return list(reversed(list(validate(command, default_map))))
+    pass
 
 
 class InteractiveFile(click.File):
     """Like click.File, but can be missing if the value is not from command line."""
 
     def convert(self, value, param, ctx):
-        try:
-            return super().convert(value, param, ctx)
-        except click.BadParameter:
-            source = ctx.get_parameter_source(param.name)
-            if source not in (ParameterSource.DEFAULT, ParameterSource.ENVIRONMENT):
-                raise
-            return None
+        pass
 
 
 def extend_defaults(ctx, param, value):

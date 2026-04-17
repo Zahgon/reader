@@ -144,7 +144,7 @@ class LazyParser:
 
     @property
     def session_factory(self) -> SessionFactory:
-        return self._session_factory
+        pass
 
     def mount_retriever(self, prefix: str, retriever: RetrieverType[Any]) -> None:
         self._lazy_call('mount_retriever', prefix, retriever)
@@ -255,15 +255,7 @@ class HTTPInfo(_namedtuple_compat):
     @property
     def cache_control(self) -> RequestCacheControl | None:
         """Parsed Cache-Control header, or None if missing."""
-
-        # lazy import
-        from ._http_utils import parse_cache_control_header
-
-        value = self.headers.get('cache-control')
-        if not value:
-            return None
-
-        return parse_cache_control_header(value)
+        pass
 
 
 class RetrieveError(ParseError):

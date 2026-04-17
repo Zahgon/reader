@@ -133,22 +133,7 @@ class TagsMixin(StorageBase):
 
     @wrap_exceptions()
     def delete_tag(self, resource_id: ResourceId, key: str) -> None:
-        info = SCHEMA_INFO[len(resource_id)]
-
-        columns = info.id_columns + ('key',)
-        query = f"""
-            DELETE FROM {info.table_prefix}tags
-            WHERE (
-                {', '.join(columns)}
-            ) = (
-                {', '.join('?' for _ in columns)}
-            )
-        """
-        params = resource_id + (key,)
-
-        with self.get_db() as db:
-            cursor = db.execute(query, params)
-        rowcount_exactly_one(cursor, lambda: TagNotFoundError(resource_id, key))
+        pass
 
 
 class SchemaInfo(NamedTuple):

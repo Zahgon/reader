@@ -19,33 +19,15 @@ from werkzeug.datastructures import MultiDict
 
 
 def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+    pass
 
 
 def redirect_to_referrer():
-    if not request.referrer:
-        return "no referrer", 400
-    if not is_safe_url(request.referrer):
-        return "bad referrer", 400
-    return redirect(request.referrer)
+    pass
 
 
 def get_flashed_messages_by_prefix(*prefixes):
-    messages = get_flashed_messages(with_categories=True)
-    rv = []
-    for pair in messages:
-        category, message = pair
-        if not isinstance(category, tuple):
-            category = (category,)
-        for prefix in prefixes:
-            if not isinstance(prefix, tuple):
-                prefix = (prefix,)
-            category_prefix = category[: len(prefix)]
-            if category_prefix == prefix:
-                rv.append(message)
-    return rv
+    pass
 
 
 class APIError(Exception):
@@ -71,61 +53,13 @@ class APIThing:
         )(get_flashed_messages_by_prefix)
 
     def dispatch_form(self):
-        action = request.form['action']
-        func = self.actions.get(action)
-        if func is None:
-            return "unknown action", 400
-        next = request.form.get('next-' + action)
-        if next is None:
-            next = request.form['next']
-        if not is_safe_url(next):
-            return "bad next", 400
-        if self.really[func]:
-            really = request.form.get('really-' + action)
-            if really is None:
-                really = request.form.get('really')
-            target = request.form.get('target')
-            if really != 'really':
-                category = (action,)
-                if target is not None:
-                    category += (target,)
-                flash(f"{action}: really not checked", category)
-                return redirect_to_referrer()
-        try:
-            rv = func(request.form)
-            flash(rv)
-        except APIError as e:
-            category = (action,)
-            if e.category:
-                category += e.category
-            flash(f"{action}: {e}", category)
-            return redirect_to_referrer()
-        return redirect(next)
+        pass
 
     def dispatch_json(self):
-        data = MultiDict(request.get_json())
-        action = data['action']
-        func = self.actions.get(action)
-        if func is None:
-            return "unknown action", 400
-
-        try:
-            rv = func(data)
-            rv = {'ok': rv}
-        except APIError as e:
-            category = (action,)
-            if e.category:
-                category += e.category
-            rv = {'err': str(e)}
-
-        return jsonify(rv)
+        pass
 
     def dispatch(self):
-        if request.mimetype == 'application/x-www-form-urlencoded':
-            return self.dispatch_form()
-        if request.mimetype == 'application/json':
-            return self.dispatch_json()
-        return "bad content type", 400
+        pass
 
     def __call__(self, func=None, *, name=None, really=False):
         def register(f, name=name):

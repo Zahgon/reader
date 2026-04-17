@@ -81,7 +81,7 @@ def count_consumed(it: Iterable[_T]) -> tuple[Iterable[_T], Callable[[], int]]:
             consumed += 1
 
     def get_count() -> int:
-        return consumed
+        pass
 
     return wrapper(), get_count
 
@@ -112,27 +112,7 @@ def make_pool_map(workers: int) -> Iterator[MapFunction[_T, _U]]:
     executor = concurrent.futures.ThreadPoolExecutor(workers)
 
     def imap_unordered(fn: Callable[[_T], _U], iterable: Iterable[_T]) -> Iterator[_U]:
-        iterable = iter(iterable)
-        iterable_ended = False
-        pending: set[concurrent.futures.Future[_U]] = set()
-
-        while pending or not iterable_ended:
-            while len(pending) < workers and not iterable_ended:
-                try:
-                    arg = next(iterable)
-                except StopIteration:
-                    iterable_ended = True
-                else:
-                    pending.add(executor.submit(fn, arg))
-
-            if not pending:  # pragma: no cover
-                return
-
-            done, pending = concurrent.futures.wait(
-                pending, return_when=concurrent.futures.FIRST_COMPLETED
-            )
-            while done:
-                yield done.pop().result()
+        pass
 
     with executor:
         yield imap_unordered
@@ -147,10 +127,10 @@ class PrefixLogger(logging.LoggerAdapter):  # type: ignore
 
     @staticmethod
     def _escape(s: str) -> str:  # pragma: no cover
-        return '%%'.join(s.split('%'))
+        pass
 
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:  # pragma: no cover
-        return ': '.join(tuple(self._escape(p) for p in self.prefixes) + (msg,)), kwargs
+        pass
 
 
 _DEPRECATED_FUNC_WARNING = """\
@@ -194,12 +174,7 @@ def _deprecated_wrapper(
 
     @wraps(func)
     def old_func(*args, **kwargs):  # type: ignore
-        warnings.warn(
-            warning_template.format_map(format_kwargs),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return func(*args, **kwargs)
+        pass
 
     old_func.__name__ = old_name
     old_func.__doc__ = docstring_template.format_map(format_kwargs)
@@ -224,25 +199,13 @@ def deprecated(
         )
 
     def decorator(func: F) -> F:
-        doc = inspect.getdoc(func) or ''
-        if doc:  # pragma: no cover
-            doc = '\n' + doc + '\n'
-        return _deprecated_wrapper(
-            func.__name__, new_name, func, deprecated_in, removed_in, doc=doc, **kwargs
-        )
+        pass
 
     return decorator
 
 
 def _name(thing: object) -> str:
-    name = getattr(thing, '__name__', None)
-    if name:
-        return str(name)
-    for attr in ('__func__', 'func'):
-        new_thing = getattr(thing, attr, None)
-        if new_thing:  # pragma: no cover
-            return _name(new_thing)
-    return '<noname>'
+    pass
 
 
 class BetterStrPartial(functools.partial[_T]):

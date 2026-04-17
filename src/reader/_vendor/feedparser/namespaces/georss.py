@@ -41,9 +41,7 @@ class Namespace:
         super().__init__()
 
     def _start_georssgeom(self, attrs_d):
-        self.push("geometry", 0)
-        context = self._get_context()
-        context["where"] = FeedParserDict()
+        pass
 
     _start_georss_point = _start_georssgeom
     _start_georss_line = _start_georssgeom
@@ -51,105 +49,57 @@ class Namespace:
     _start_georss_box = _start_georssgeom
 
     def _save_where(self, geometry):
-        context = self._get_context()
-        context["where"].update(geometry)
+        pass
 
     def _end_georss_point(self):
-        geometry = _parse_georss_point(self.pop("geometry"))
-        if geometry:
-            self._save_where(geometry)
+        pass
 
     def _end_georss_line(self):
-        geometry = _parse_georss_line(self.pop("geometry"))
-        if geometry:
-            self._save_where(geometry)
+        pass
 
     def _end_georss_polygon(self):
-        this = self.pop("geometry")
-        geometry = _parse_georss_polygon(this)
-        if geometry:
-            self._save_where(geometry)
+        pass
 
     def _end_georss_box(self):
-        geometry = _parse_georss_box(self.pop("geometry"))
-        if geometry:
-            self._save_where(geometry)
+        pass
 
     def _start_where(self, attrs_d):
-        self.push("where", 0)
-        context = self._get_context()
-        context["where"] = FeedParserDict()
+        pass
 
     _start_georss_where = _start_where
 
     def _parse_srs_attrs(self, attrs_d):
-        srs_name = attrs_d.get("srsname")
-        try:
-            srs_dimension = int(attrs_d.get("srsdimension", "2"))
-        except ValueError:
-            srs_dimension = 2
-        context = self._get_context()
-        if "where" not in context:
-            context["where"] = {}
-        context["where"]["srsName"] = srs_name
-        context["where"]["srsDimension"] = srs_dimension
+        pass
 
     def _start_gml_point(self, attrs_d):
-        self._parse_srs_attrs(attrs_d)
-        self.ingeometry = 1
-        self.push("geometry", 0)
+        pass
 
     def _start_gml_linestring(self, attrs_d):
-        self._parse_srs_attrs(attrs_d)
-        self.ingeometry = "linestring"
-        self.push("geometry", 0)
+        pass
 
     def _start_gml_polygon(self, attrs_d):
-        self._parse_srs_attrs(attrs_d)
-        self.push("geometry", 0)
+        pass
 
     def _start_gml_exterior(self, attrs_d):
-        self.push("geometry", 0)
+        pass
 
     def _start_gml_linearring(self, attrs_d):
-        self.ingeometry = "polygon"
-        self.push("geometry", 0)
+        pass
 
     def _start_gml_pos(self, attrs_d):
-        self.push("pos", 0)
+        pass
 
     def _end_gml_pos(self):
-        this = self.pop("pos")
-        context = self._get_context()
-        srs_name = context["where"].get("srsName")
-        srs_dimension = context["where"].get("srsDimension", 2)
-        swap = True
-        if srs_name and "EPSG" in srs_name:
-            epsg = int(srs_name.split(":")[-1])
-            swap = bool(epsg in _geogCS)
-        geometry = _parse_georss_point(this, swap=swap, dims=srs_dimension)
-        if geometry:
-            self._save_where(geometry)
+        pass
 
     def _start_gml_poslist(self, attrs_d):
-        self.push("pos", 0)
+        pass
 
     def _end_gml_poslist(self):
-        this = self.pop("pos")
-        context = self._get_context()
-        srs_name = context["where"].get("srsName")
-        srs_dimension = context["where"].get("srsDimension", 2)
-        swap = True
-        if srs_name and "EPSG" in srs_name:
-            epsg = int(srs_name.split(":")[-1])
-            swap = bool(epsg in _geogCS)
-        geometry = _parse_poslist(this, self.ingeometry, swap=swap, dims=srs_dimension)
-        if geometry:
-            self._save_where(geometry)
+        pass
 
     def _end_geom(self):
-        self.ingeometry = 0
-        self.pop("geometry")
+        pass
 
     _end_gml_point = _end_geom
     _end_gml_linestring = _end_geom
@@ -158,7 +108,7 @@ class Namespace:
     _end_gml_polygon = _end_geom
 
     def _end_where(self):
-        self.pop("where")
+        pass
 
     _end_georss_where = _end_where
 
@@ -168,48 +118,26 @@ class Namespace:
 
 
 def _parse_poslist(value, geom_type, swap=True, dims=2):
-    if geom_type == "linestring":
-        return _parse_georss_line(value, swap, dims)
-    elif geom_type == "polygon":
-        ring = _parse_georss_line(value, swap, dims)
-        return {"type": "Polygon", "coordinates": (ring["coordinates"],)}
-    else:
-        return None
+    pass
 
 
 def _gen_georss_coords(value, swap=True, dims=2):
     # A generator of (lon, lat) pairs from a string of encoded GeoRSS
     # coordinates. Converts to floats and swaps order.
-    latlons = (float(ll) for ll in value.replace(",", " ").split())
-    while True:
-        try:
-            t = [next(latlons), next(latlons)][:: swap and -1 or 1]
-            if dims == 3:
-                t.append(next(latlons))
-            yield tuple(t)
-        except StopIteration:
-            return
+    pass
 
 
 def _parse_georss_point(value, swap=True, dims=2):
     # A point contains a single latitude-longitude pair, separated by
     # whitespace. We'll also handle comma separators.
-    try:
-        coords = list(_gen_georss_coords(value, swap, dims))
-        return {"type": "Point", "coordinates": coords[0]}
-    except (IndexError, ValueError):
-        return None
+    pass
 
 
 def _parse_georss_line(value, swap=True, dims=2):
     # A line contains a space separated list of latitude-longitude pairs in
     # WGS84 coordinate reference system, with each pair separated by
     # whitespace. There must be at least two pairs.
-    try:
-        coords = list(_gen_georss_coords(value, swap, dims))
-        return {"type": "LineString", "coordinates": coords}
-    except (IndexError, ValueError):
-        return None
+    pass
 
 
 def _parse_georss_polygon(value, swap=True, dims=2):
@@ -217,13 +145,7 @@ def _parse_georss_polygon(value, swap=True, dims=2):
     # with each pair separated by whitespace. There must be at least four
     # pairs, with the last being identical to the first (so a polygon has a
     # minimum of three actual points).
-    try:
-        ring = list(_gen_georss_coords(value, swap, dims))
-    except (IndexError, ValueError):
-        return None
-    if len(ring) < 4:
-        return None
-    return {"type": "Polygon", "coordinates": (ring,)}
+    pass
 
 
 def _parse_georss_box(value, swap=True, dims=2):
@@ -231,11 +153,7 @@ def _parse_georss_box(value, swap=True, dims=2):
     # of a map or a rough area of interest. A box contains two space separate
     # latitude-longitude pairs, with each pair separated by whitespace. The
     # first pair is the lower corner, the second is the upper corner.
-    try:
-        coords = list(_gen_georss_coords(value, swap, dims))
-        return {"type": "Box", "coordinates": tuple(coords)}
-    except (IndexError, ValueError):
-        return None
+    pass
 
 
 # The list of EPSG codes for geographic (latitude/longitude) coordinate

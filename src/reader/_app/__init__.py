@@ -49,19 +49,17 @@ blueprint = Blueprint(
 
 @blueprint.errorhandler(FeedNotFoundError)
 def handle_feed_not_found(e):
-    return NotFound()
+    pass
 
 
 @blueprint.errorhandler(EntryNotFoundError)
 def handle_entry_not_found(e):
-    return NotFound()
+    pass
 
 
 @blueprint.errorhandler(CSRFError)
 def handle_csrf_error(error):
-    if request.headers.get('hx-request') == 'true':
-        return render_template_string(CSRF_ERROR_TEMPLATE, error=error), 419
-    return error
+    pass
 
 
 CSRF_ERROR_TEMPLATE = """\
@@ -76,131 +74,22 @@ CSRF_ERROR_TEMPLATE = """\
 
 @blueprint.route('/')
 def entries():
-    reader = get_reader()
-
-    form = EntryFilter(request.args)
-
-    feed = None
-    if feed_url := form.feed.data:
-        feed = reader.get_feed(feed_url)
-
-    kwargs = dict(form.data)
-
-    if not (feed or kwargs.get('starting_after')):
-        limit = 64
-    else:
-        limit = 256
-
-    get_entries = reader.get_entries
-
-    entries = []
-    if form.validate():
-        entries = get_entries(**kwargs, limit=limit)
-
-    return stream_template(
-        'entries.html',
-        form=form,
-        entries=entries,
-        feed=feed,
-        limit=limit,
-    )
+    pass
 
 
 @blueprint.route('/entry-actions', methods=['POST'])
 def entry_actions():
-    reader = get_reader()
-
-    entry = request.form['feed'], request.form['entry']
-
-    if 'read' in request.form:
-        match request.form['read']:
-            case 'read':
-                reader.set_entry_read(entry, True)
-            case 'unread':
-                reader.set_entry_read(entry, False)
-            case _:
-                abort(422)
-
-    if 'important' in request.form:
-        match request.form['important']:
-            case 'important':
-                reader.set_entry_important(entry, True)
-            case 'unimportant':
-                reader.set_entry_important(entry, False)
-            case 'clear':
-                reader.set_entry_important(entry, None)
-            case _:
-                abort(422)
-
-    if request.headers.get('hx-request') == 'true':
-        if urlparse(request.headers['hx-current-url']).path == url_for('.entry'):
-            template = 'entry.html'
-        else:
-            template = 'entries.html'
-
-    if request.headers.get('hx-request') == 'true':
-        return render_block(
-            template,
-            'entry_actions',
-            entry=reader.get_entry(entry),
-            next=request.form.get('next'),
-            # equivalent to {% import "macros.html" as macros %}
-            macros=current_app.jinja_env.get_template('macros.html').module,
-        )
-
-    return redirect(request.form['next'], code=303)
+    pass
 
 
 @blueprint.route('/feeds')
 def feeds():
-    reader = get_reader()
-
-    form = FeedFilter(request.args)
-
-    kwargs = dict(form.data)
-
-    feeds = []
-    if form.validate():
-        feeds = reader.get_feeds(**kwargs)
-
-    return stream_template(
-        'feeds.html',
-        form=form,
-        feeds=feeds,
-    )
+    pass
 
 
 @blueprint.route('/feed-actions', methods=['POST'])
 def feed_actions():
-    reader = get_reader()
-
-    feed = request.form['feed']
-
-    if 'enabled' in request.form:
-        match request.form['enabled']:
-            case 'enable':
-                reader.enable_feed_updates(feed)
-            case 'disable':
-                reader.disable_feed_updates(feed)
-            case _:
-                abort(422)
-
-    if request.headers.get('hx-request') == 'true':
-        if urlparse(request.headers['hx-current-url']).path == url_for('.entries'):
-            template = 'entries.html'
-        else:
-            template = 'feeds.html'
-
-        return render_block(
-            template,
-            'feed_actions',
-            feed=reader.get_feed(feed),
-            next=request.form.get('next'),
-            # equivalent to {% import "macros.html" as macros %}
-            macros=current_app.jinja_env.get_template('macros.html').module,
-        )
-
-    return redirect(request.form['next'], code=303)
+    pass
 
 
 @blueprint.route('/feeds/delete', methods=['GET', 'POST'])
@@ -218,27 +107,7 @@ def delete_feed():
 
 @blueprint.route('/feeds/title', methods=['GET', 'POST'])
 def change_feed_title():
-    reader = get_reader()
-    feed = reader.get_feed(request.args['feed'])
-
-    form = ChangeFeedTitle(request.form, title=feed.resolved_title)
-
-    if request.method == 'POST' and form.validate():
-        title = form.title.data
-        if not title or title == feed.title:
-            title = None
-        if title == feed.user_title:
-            flash("Feed title is unchanged.", 'secondary')
-        else:
-            reader.set_feed_user_title(feed, title)
-            flash(
-                f"Changed feed title from {feed.resolved_title or feed.url}"
-                f" to {title or feed.title or feed.url}.",
-                'success',
-            )
-        return redirect(url_for('.entries', feed=feed.url), code=303)
-
-    return render_template('change_feed_title.html', form=form, feed=feed)
+    pass
 
 
 @blueprint.route('/feeds/add', methods=['GET', 'POST'])
@@ -281,72 +150,27 @@ def stream_template(template_name_or_list, **kwargs):
     # otherwise they keep adding up and never disappear.
     # Assumes the template will call get_flashed_messages() at some point.
     # https://github.com/lemon24/reader/issues/81
-    get_flashed_messages()
-
-    # Ensure the CSRF session token is set.
-    # Assumes the template will generate a token at some at some point.
-    # https://github.com/pallets-eco/flask-wtf/issues/668
-    generate_csrf()
-
-    template = current_app.jinja_env.get_template(template_name_or_list)
-    current_app.update_template_context(kwargs)
-
-    stream = template.stream(**kwargs)
-    # TODO: increase to at least 1-2k, like this we have 50% overhead
-    # TODO: alternatively, just usse flask.stream_template (no buffering)
-    stream.enable_buffering(50)
-
-    return Response(stream_with_context(stream))
+    pass
 
 
 @blueprint.app_template_filter()
 def humanize_naturaltime(dt):
-    when = None
-    if dt.tzinfo:
-        when = datetime.now(tz=timezone.utc)
-    try:
-        return humanize.naturaltime(dt, when=when)
-    except ValueError as e:
-        # can happen for 0001-01-01
-        if 'year 0 is out of range' not in str(e):
-            raise
-        return humanize.naturaltime(dt + timedelta(days=1), when=when)
+    pass
 
 
 @blueprint.record_once
 def add_jinja_do_extension(setup_state):
-    setup_state.app.jinja_env.add_extension('jinja2.ext.do')
+    pass
 
 
 @blueprint.app_template_global()
 def find_static(filename, blueprint=None):
-    blueprint = blueprint or request.blueprint
-    if blueprint:
-        endpoint = f'{blueprint}.static'
-        folder = current_app.blueprints[blueprint].static_folder
-    else:
-        endpoint = 'static'
-        folder = current_app.static_folder
-
-    find = _find_static.__wrapped__ if current_app.debug else _find_static
-    return url_for(endpoint, filename=find(folder, filename))
+    pass
 
 
 @lru_cache
 def _find_static(folder, filename):
-    dir = pathlib.Path(folder)
-    matches = [p.relative_to(dir) for p in dir.rglob(filename)]
-
-    if not matches:
-        raise RuntimeError(f"no such static file: {filename!r}")
-    if len(matches) > 1:
-        sep = '\n* '
-        raise RuntimeError(
-            f"more than one static file for {filename!r}:\n"
-            f"{sep}{sep.join(p.as_posix() for p in matches)}\n"
-        )
-
-    return matches[0]
+    pass
 
 
 def create_app(reader_config):

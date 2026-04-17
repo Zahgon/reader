@@ -69,19 +69,7 @@ log = logging.getLogger(__name__)
 
 
 def _get_config(reader, feed_url, key, patterns_key):
-    value = reader.get_tag(feed_url, key, None)
-    if value is None:
-        return None
-
-    if isinstance(value, dict):
-        patterns = value.get(patterns_key, [])
-        if isinstance(patterns, list):
-            if all(isinstance(p, str) for p in patterns):
-                return patterns
-
-    # TODO: there should be a hook to allow plugins to validate tags
-    log.warning("%s: invalid mark_as_read config: %s", feed_url, key)
-    return []
+    pass
 
 
 _CONFIG_TAG = 'mark-as-read'
@@ -89,38 +77,11 @@ _ONCE_TAG = _CONFIG_TAG + '.once'
 
 
 def _mark_as_read(reader, entry, status):
-    if status is EntryUpdateStatus.MODIFIED:
-        return
-
-    key = reader.make_reader_reserved_name(_CONFIG_TAG)
-    patterns = _get_config(reader, entry.feed_url, key, 'title')
-
-    try:
-        for pattern in patterns or ():
-            if re.search(pattern, entry.title or ''):
-                reader.set_entry_read(entry, True, None)
-                reader.set_entry_important(entry, False, None)
-                return
-    except EntryNotFoundError as e:
-        if entry.resource_id != e.resource_id:  # pragma: no cover
-            raise
-        log.info("entry %r was deleted, skipping", entry.resource_id)
+    pass
 
 
 def _mark_as_read_backfill(reader, feed):
-    key = reader.make_reader_reserved_name(_ONCE_TAG)
-    try:
-        reader.get_tag(feed, key)
-    except TagNotFoundError:
-        return
-
-    log.info("feed %s: processing existing entries")
-
-    # only process entries that have not been touched by the user
-    for entry in reader.get_entries(feed=feed, read=False, important='notset'):
-        _mark_as_read(reader, entry, EntryUpdateStatus.NEW)
-
-    reader.delete_tag(feed, key, missing_ok=True)
+    pass
 
 
 def init_reader(reader):

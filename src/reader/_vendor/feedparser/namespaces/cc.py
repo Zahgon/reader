@@ -44,27 +44,14 @@ class Namespace:
     }
 
     def _start_cc_license(self, attrs_d):
-        context = self._get_context()
-        value = self._get_attribute(attrs_d, "rdf:resource")
-        attrs_d = FeedParserDict()
-        attrs_d["rel"] = "license"
-        if value:
-            attrs_d["href"] = value
-        context.setdefault("links", []).append(attrs_d)
+        pass
 
     def _start_creativecommons_license(self, attrs_d):
-        self.push("license", 1)
+        pass
 
     _start_creativeCommons_license = _start_creativecommons_license
 
     def _end_creativecommons_license(self):
-        value = self.pop("license")
-        context = self._get_context()
-        attrs_d = FeedParserDict()
-        attrs_d["rel"] = "license"
-        if value:
-            attrs_d["href"] = value
-        context.setdefault("links", []).append(attrs_d)
-        del context["license"]
+        pass
 
     _end_creativeCommons_license = _end_creativecommons_license

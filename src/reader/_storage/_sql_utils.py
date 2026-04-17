@@ -159,41 +159,10 @@ class BaseQuery:
         return ''.join(self._lines())
 
     def _lines(self) -> Iterable[str]:
-        for keyword, things in self.data.items():
-            if not things:
-                continue
-
-            if things.flag:
-                yield f'{keyword} {things.flag}\n'
-            else:
-                yield f'{keyword}\n'
-
-            grouped: tuple[list[_Thing], ...] = ([], [])
-            for thing in things:
-                grouped[bool(thing.keyword)].append(thing)
-            for group in grouped:
-                yield from self._lines_keyword(keyword, group)
+        pass
 
     def _lines_keyword(self, keyword: str, things: list[_Thing]) -> Iterable[str]:
-        for i, thing in enumerate(things):
-            last = i + 1 == len(things)
-
-            if thing.keyword:
-                yield thing.keyword + '\n'
-
-            format = self.formats[bool(thing.alias)][keyword]
-            value = thing.value
-            if thing.is_subquery:
-                value = f'(\n{self._indent(value)}\n)'
-            yield self._indent(format.format(value=value, alias=thing.alias))
-
-            if not last and not thing.keyword:
-                try:
-                    yield ' ' + self.separators[keyword]
-                except KeyError:
-                    yield self.default_separator
-
-            yield '\n'
+        pass
 
     _indent = staticmethod(functools.partial(textwrap.indent, prefix='    '))
 
@@ -244,9 +213,7 @@ class Query(ScrollingWindowMixin, BaseQuery):
         return self.WITH((alias, value))
 
     def scrolling_window_sort_key(self, key: SortKey, keyword: str = 'WHERE') -> Self:
-        self.SELECT(*key)
-        super().scrolling_window_order_by(*key.names(), desc=key.desc, keyword=keyword)
-        return self
+        pass
 
 
 class SortKey(list[_QArg]):
@@ -255,10 +222,7 @@ class SortKey(list[_QArg]):
         self.desc = desc
 
     def names(self, prefix: str = '') -> list[str]:
-        rv = [t if isinstance(t, str) else t[0] for t in self]
-        if prefix:
-            rv = [prefix + n for n in rv]
-        return rv
+        pass
 
 
 def paginated_query(

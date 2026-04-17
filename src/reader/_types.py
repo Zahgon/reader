@@ -93,20 +93,17 @@ class FeedData(_namedtuple_compat):
             :class:`~reader.Feed`.
 
         """
-        attrs = dict(self.__dict__)
-        attrs.pop('hash', None)
-        attrs.update(kwargs)
-        return Feed(**attrs)
+        pass
 
     @property
     def resource_id(self) -> tuple[str]:
-        return (self.url,)
+        pass
 
     _hash_exclude_ = frozenset({'url', 'updated'})
 
     @cached_property
     def hash(self) -> bytes:
-        return get_hash(self)
+        pass
 
 
 @dataclass(frozen=True)
@@ -149,23 +146,17 @@ class EntryData(_namedtuple_compat):
             :class:`~reader.Entry`.
 
         """
-        attrs = dict(self.__dict__)
-        feed_url = attrs.pop('feed_url')
-        attrs.pop('hash', None)
-        attrs.update(kwargs)
-        attrs.setdefault('original_feed_url', feed_url)
-        attrs.setdefault('added_by', 'feed')
-        return Entry(**attrs)
+        pass
 
     @property
     def resource_id(self) -> tuple[str, str]:
-        return self.feed_url, self.id
+        pass
 
     _hash_exclude_ = frozenset({'feed_url', 'id', 'updated'})
 
     @cached_property
     def hash(self) -> bytes:
-        return get_hash(self)
+        pass
 
 
 def entry_data_from_obj(obj: object) -> EntryData:
@@ -448,23 +439,7 @@ def tag_filter_argument(tags: TagFilterInput, name: str = 'tags') -> TagFilter:
         raise ValueError(f"{name} must be none, bool, or a non-string sequence")
 
     def normalize_tag(tag: str | bool) -> bool | tuple[bool, str]:
-        if isinstance(tag, bool):
-            return tag
-
-        if not isinstance(tag, str):
-            raise ValueError(
-                f"the elements of {name} must be strings, bool or string/bool sequences"
-            )
-
-        is_negation = False
-        if tag.startswith('-'):
-            is_negation = True
-            tag = tag[1:]
-
-        if not tag:
-            raise ValueError("tag strings must be non-empty")
-
-        return is_negation, tag
+        pass
 
     rv = []
     for subtags in tags:

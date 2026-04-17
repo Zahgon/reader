@@ -44,12 +44,10 @@ class Tee:
         self.files = files
 
     def write(self, data):
-        for file in self.files:
-            file.write(data)
+        pass
 
     def flush(self):
-        for file in self.files:
-            file.flush()
+        pass
 
 
 FEED = 'reader:status'
@@ -148,34 +146,4 @@ def parse_output(output):
 
 
 def init_cli(config):
-    now = Reader._now()
-
-    ctx = click.get_current_context()
-    command = ctx.command
-
-    command_path = []
-
-    def add_trace(command):
-        callback = command.callback
-
-        def wrapper(*args, **kwargs):
-            command_path.append(command.name)
-            if callback:
-                return callback(*args, **kwargs)
-
-        command.callback = wrapper
-
-        subcommands = list(getattr(command, 'commands', {}).values())
-        for subcommand in subcommands:
-            add_trace(subcommand)
-
-    add_trace(command)
-
-    output = io.StringIO()
-    ctx.with_resource(redirect_stdout(Tee(sys.stdout, output)))
-
-    @pass_reader
-    def callback(reader):
-        save_output(reader, now, config, command_path, output.getvalue())
-
-    ctx.call_on_close(callback)
+    pass

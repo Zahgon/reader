@@ -223,188 +223,24 @@ class XMLParserMixin(
 
     def unknown_starttag(self, tag, attrs):
         # increment depth counter
-        self.depth += 1
-
-        # normalize attrs
-        attrs = [self._normalize_attributes(attr) for attr in attrs]
-
-        # track xml:base and xml:lang
-        attrs_d = dict(attrs)
-        baseuri = attrs_d.get("xml:base", attrs_d.get("base")) or self.baseuri
-        if isinstance(baseuri, bytes):
-            baseuri = baseuri.decode(self.encoding, "ignore")
-        # ensure that self.baseuri is always an absolute URI that
-        # uses a whitelisted URI scheme (e.g. not `javascript:`)
-        if self.baseuri:
-            self.baseuri = make_safe_absolute_uri(self.baseuri, baseuri) or self.baseuri
-        else:
-            self.baseuri = _urljoin(self.baseuri, baseuri)
-        lang = attrs_d.get("xml:lang", attrs_d.get("lang"))
-        if lang == "":
-            # xml:lang could be explicitly set to '', we need to capture that
-            lang = None
-        elif lang is None:
-            # if no xml:lang is specified, use parent lang
-            lang = self.lang
-        if lang:
-            if tag in ("feed", "rss", "rdf:RDF"):
-                self.feeddata["language"] = lang.replace("_", "-")
-        self.lang = lang
-        self.basestack.append(self.baseuri)
-        self.langstack.append(lang)
-
-        # track namespaces
-        for prefix, uri in attrs:
-            if prefix.startswith("xmlns:"):
-                self.track_namespace(prefix[6:], uri)
-            elif prefix == "xmlns":
-                self.track_namespace(None, uri)
-
-        # track inline content
-        if self.incontent and not self.contentparams.get("type", "xml").endswith("xml"):
-            if tag in ("xhtml:div", "div"):
-                return  # typepad does this 10/2007
-            # element declared itself as escaped markup, but it isn't really
-            self.contentparams["type"] = "application/xhtml+xml"
-        if self.incontent and self.contentparams.get("type") == "application/xhtml+xml":
-            if tag.find(":") != -1:
-                prefix, tag = tag.split(":", 1)
-                namespace = self.namespaces_in_use.get(prefix, "")
-                if tag == "math" and namespace == "http://www.w3.org/1998/Math/MathML":
-                    attrs.append(("xmlns", namespace))
-                if tag == "svg" and namespace == "http://www.w3.org/2000/svg":
-                    attrs.append(("xmlns", namespace))
-            if tag == "svg":
-                self.svgOK += 1
-            return self.handle_data(f"<{tag}{self.strattrs(attrs)}>", escape=0)
-
-        # match namespaces
-        if tag.find(":") != -1:
-            prefix, suffix = tag.split(":", 1)
-        else:
-            prefix, suffix = "", tag
-        prefix = self.namespacemap.get(prefix, prefix)
-        if prefix:
-            prefix = prefix + "_"
-
-        # Special hack for better tracking of empty textinput/image elements in
-        # illformed feeds.
-        if (not prefix) and tag not in ("title", "link", "description", "name"):
-            self.intextinput = 0
-        if (not prefix) and tag not in (
-            "title",
-            "link",
-            "description",
-            "url",
-            "href",
-            "width",
-            "height",
-        ):
-            self.inimage = 0
-
-        # call special handler (if defined) or default handler
-        methodname = "_start_" + prefix + suffix
-        try:
-            method = getattr(self, methodname)
-            return method(attrs_d)
-        except AttributeError:
-            # Since there's no handler or something has gone wrong we
-            # explicitly add the element and its attributes.
-            unknown_tag = prefix + suffix
-            if len(attrs_d) == 0:
-                # No attributes so merge it into the enclosing dictionary
-                return self.push(unknown_tag, 1)
-            else:
-                # Has attributes so create it in its own dictionary
-                context = self._get_context()
-                context[unknown_tag] = attrs_d
+        pass
 
     def unknown_endtag(self, tag):
         # match namespaces
-        if tag.find(":") != -1:
-            prefix, suffix = tag.split(":", 1)
-        else:
-            prefix, suffix = "", tag
-        prefix = self.namespacemap.get(prefix, prefix)
-        if prefix:
-            prefix = prefix + "_"
-        if suffix == "svg" and self.svgOK:
-            self.svgOK -= 1
-
-        # call special handler (if defined) or default handler
-        methodname = "_end_" + prefix + suffix
-        try:
-            if self.svgOK:
-                raise AttributeError()
-            method = getattr(self, methodname)
-            method()
-        except AttributeError:
-            self.pop(prefix + suffix)
-
-        # track inline content
-        if self.incontent and not self.contentparams.get("type", "xml").endswith("xml"):
-            # element declared itself as escaped markup, but it isn't really
-            if tag in ("xhtml:div", "div"):
-                return  # typepad does this 10/2007
-            self.contentparams["type"] = "application/xhtml+xml"
-        if self.incontent and self.contentparams.get("type") == "application/xhtml+xml":
-            tag = tag.split(":")[-1]
-            self.handle_data("</%s>" % tag, escape=0)
-
-        # track xml:base and xml:lang going out of scope
-        if self.basestack:
-            self.basestack.pop()
-            if self.basestack and self.basestack[-1]:
-                self.baseuri = self.basestack[-1]
-        if self.langstack:
-            self.langstack.pop()
-            if self.langstack:  # and (self.langstack[-1] is not None):
-                self.lang = self.langstack[-1]
-
-        self.depth -= 1
+        pass
 
     def handle_charref(self, ref):
         # Called for each character reference, e.g. for '&#160;', ref is '160'
-        if not self.elementstack:
-            return
-        ref = ref.lower()
-        if ref in ("34", "38", "39", "60", "62", "x22", "x26", "x27", "x3c", "x3e"):
-            text = "&#%s;" % ref
-        else:
-            if ref[0] == "x":
-                c = int(ref[1:], 16)
-            else:
-                c = int(ref)
-            text = chr(c).encode("utf-8")
-        self.elementstack[-1][2].append(text)
+        pass
 
     def handle_entityref(self, ref):
         # Called for each entity reference, e.g. for '&copy;', ref is 'copy'
-        if not self.elementstack:
-            return
-        if ref in ("lt", "gt", "quot", "amp", "apos"):
-            text = "&%s;" % ref
-        elif ref in self.entities:
-            text = self.entities[ref]
-            if text.startswith("&#") and text.endswith(";"):
-                return self.handle_entityref(text)
-        else:
-            try:
-                html.entities.name2codepoint[ref]
-            except KeyError:
-                text = "&%s;" % ref
-            else:
-                text = chr(html.entities.name2codepoint[ref]).encode("utf-8")
-        self.elementstack[-1][2].append(text)
+        pass
 
     def handle_data(self, text, escape=1):
         # Called for each block of plain text, i.e. outside of any tag and
         # not containing any character or entity references
-        if not self.elementstack:
-            return
-        if escape and self.contentparams.get("type") == "application/xhtml+xml":
-            text = xml.sax.saxutils.escape(text)
-        self.elementstack[-1][2].append(text)
+        pass
 
     def handle_comment(self, text):
         # Called for each comment, e.g. <!-- insert message here -->
@@ -419,21 +255,7 @@ class XMLParserMixin(
 
     def parse_declaration(self, i):
         # Override internal declaration handler to handle CDATA blocks.
-        if self.rawdata[i : i + 9] == "<![CDATA[":
-            k = self.rawdata.find("]]>", i)
-            if k == -1:
-                # CDATA block began but didn't finish
-                k = len(self.rawdata)
-                return k
-            self.handle_data(xml.sax.saxutils.escape(self.rawdata[i + 9 : k]), 0)
-            return k + 3
-        else:
-            k = self.rawdata.find(">", i)
-            if k >= 0:
-                return k + 1
-            else:
-                # We have an incomplete CDATA block.
-                return k
+        pass
 
     @staticmethod
     def map_content_type(content_type):
@@ -447,23 +269,7 @@ class XMLParserMixin(
         return content_type
 
     def track_namespace(self, prefix, uri):
-        loweruri = uri.lower()
-        if not self.version:
-            if (prefix, loweruri) == (None, "http://my.netscape.com/rdf/simple/0.9/"):
-                self.version = "rss090"
-            elif loweruri == "http://purl.org/rss/1.0/":
-                self.version = "rss10"
-            elif loweruri == "http://www.w3.org/2005/atom":
-                self.version = "atom10"
-        if loweruri.find("backend.userland.com/rss") != -1:
-            # match any backend.userland.com namespace
-            uri = "http://backend.userland.com/rss"
-            loweruri = uri
-        if loweruri in self._matchnamespaces:
-            self.namespacemap[prefix] = self._matchnamespaces[loweruri]
-            self.namespaces_in_use[self._matchnamespaces[loweruri]] = uri
-        else:
-            self.namespaces_in_use[prefix or ""] = uri
+        pass
 
     def resolve_uri(self, uri):
         return _urljoin(self.baseuri or "", uri)
@@ -474,13 +280,10 @@ class XMLParserMixin(
 
     @staticmethod
     def strattrs(attrs):
-        return "".join(
-            ' {}="{}"'.format(t[0], xml.sax.saxutils.escape(t[1], {'"': "&quot;"}))
-            for t in attrs
-        )
+        pass
 
     def push(self, element, expecting_text):
-        self.elementstack.append([element, expecting_text, []])
+        pass
 
     def pop(self, element, strip_whitespace=1):
         if not self.elementstack:
@@ -661,26 +464,10 @@ class XMLParserMixin(
         return output
 
     def push_content(self, tag, attrs_d, default_content_type, expecting_text):
-        self.incontent += 1
-        if self.lang:
-            self.lang = self.lang.replace("_", "-")
-        self.contentparams = FeedParserDict(
-            {
-                "type": self.map_content_type(
-                    attrs_d.get("type", default_content_type)
-                ),
-                "language": self.lang,
-                "base": self.baseuri,
-            }
-        )
-        self.contentparams["base64"] = self._is_base64(attrs_d, self.contentparams)
-        self.push(tag, expecting_text)
+        pass
 
     def pop_content(self, tag):
-        value = self.pop(tag)
-        self.incontent -= 1
-        self.contentparams.clear()
-        return value
+        pass
 
     # a number of elements in a number of RSS variants are nominally plain
     # text, but this is routinely ignored.  This is an attempt to detect
@@ -714,49 +501,20 @@ class XMLParserMixin(
         return True
 
     def _map_to_standard_prefix(self, name):
-        colonpos = name.find(":")
-        if colonpos != -1:
-            prefix = name[:colonpos]
-            suffix = name[colonpos + 1 :]
-            prefix = self.namespacemap.get(prefix, prefix)
-            name = prefix + ":" + suffix
-        return name
+        pass
 
     def _get_attribute(self, attrs_d, name):
-        return attrs_d.get(self._map_to_standard_prefix(name))
+        pass
 
     def _is_base64(self, attrs_d, contentparams):
-        if attrs_d.get("mode", "") == "base64":
-            return 1
-        if self.contentparams["type"].startswith("text/"):
-            return 0
-        if self.contentparams["type"].endswith("+xml"):
-            return 0
-        if self.contentparams["type"].endswith("/xml"):
-            return 0
-        return 1
+        pass
 
     @staticmethod
     def _enforce_href(attrs_d):
-        href = attrs_d.get("url", attrs_d.get("uri", attrs_d.get("href", None)))
-        if href:
-            try:
-                del attrs_d["url"]
-            except KeyError:
-                pass
-            try:
-                del attrs_d["uri"]
-            except KeyError:
-                pass
-            attrs_d["href"] = href
-        return attrs_d
+        pass
 
     def _save(self, key, value, overwrite=False):
-        context = self._get_context()
-        if overwrite:
-            context[key] = value
-        else:
-            context.setdefault(key, value)
+        pass
 
     def _get_context(self):
         if self.insource:
@@ -772,71 +530,22 @@ class XMLParserMixin(
         return context
 
     def _save_author(self, key, value, prefix="author"):
-        context = self._get_context()
-        context.setdefault(prefix + "_detail", FeedParserDict())
-        context[prefix + "_detail"][key] = value
-        self._sync_author_detail()
-        context.setdefault("authors", [FeedParserDict()])
-        context["authors"][-1][key] = value
+        pass
 
     def _save_contributor(self, key, value):
-        context = self._get_context()
-        context.setdefault("contributors", [FeedParserDict()])
-        context["contributors"][-1][key] = value
+        pass
 
     def _sync_author_detail(self, key="author"):
-        context = self._get_context()
-        detail = context.get("%ss" % key, [FeedParserDict()])[-1]
-        if detail:
-            name = detail.get("name")
-            email = detail.get("email")
-            if name and email:
-                context[key] = f"{name} ({email})"
-            elif name:
-                context[key] = name
-            elif email:
-                context[key] = email
-        else:
-            author, email = context.get(key), None
-            if not author:
-                return
-            emailmatch = email_pattern.search(author)
-            if emailmatch:
-                email = emailmatch.group(0)
-                # probably a better way to do the following, but it passes
-                # all the tests
-                author = author.replace(email, "")
-                author = author.replace("()", "")
-                author = author.replace("<>", "")
-                author = author.replace("&lt;&gt;", "")
-                author = author.strip()
-                if author and (author[0] == "("):
-                    author = author[1:]
-                if author and (author[-1] == ")"):
-                    author = author[:-1]
-                author = author.strip()
-            if author or email:
-                context.setdefault("%s_detail" % key, detail)
-            if author:
-                detail["name"] = author
-            if email:
-                detail["email"] = email
+        pass
 
     def _add_tag(self, term, scheme, label):
-        context = self._get_context()
-        tags = context.setdefault("tags", [])
-        if (not term) and (not scheme) and (not label):
-            return
-        value = FeedParserDict(term=term, scheme=scheme, label=label)
-        if value not in tags:
-            tags.append(value)
+        pass
 
     def _start_tags(self, attrs_d):
         # This is a completely-made up element. Its semantics are determined
         # only by a single feed that precipitated bug report 392 on Google Code.
         # In short, this is junk code.
-        self.push("tags", 1)
+        pass
 
     def _end_tags(self):
-        for term in self.pop("tags").split(","):
-            self._add_tag(term.strip(), None, None)
+        pass

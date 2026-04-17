@@ -34,17 +34,7 @@ _LEGACY_PLUGINS = {
 
 def _process_legacy(name: str) -> str | None:
     # TODO: Remove legacy reader.<plugin> support in 4.0.
-    if name not in _LEGACY_PLUGINS:
-        return None
-    new_name = name.removeprefix('reader')
-    warnings.warn(
-        "Support for built-in plugin names starting with 'reader.' "
-        "is deprecated and will be removed in reader 4.0. "
-        f"Use {new_name!r} instead of {name!r}.",
-        DeprecationWarning,
-        stacklevel=5,
-    )
-    return new_name
+    pass
 
 
 _PLUGIN_LOADER = PluginLoader['Reader'](

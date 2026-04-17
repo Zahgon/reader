@@ -28,7 +28,7 @@ class _FancyExceptionBase(Exception):
     @property
     def _str(self) -> str:
         """The exception's unique attributes, as string; overridable."""
-        return ''
+        pass
 
     @property
     def message(self) -> str:
@@ -38,19 +38,15 @@ class _FancyExceptionBase(Exception):
             Became read-only.
 
         """
-        # read-only for compatibility with ExceptionGroup
-        return self._message
+        pass
 
     @cached_property
     def _cause_name(self) -> str:
-        if not self.__cause__:
-            return ''
-        t = type(self.__cause__)
-        return f'{t.__module__}.{t.__qualname__}'
+        pass
 
     @cached_property
     def _cause_str(self) -> str:
-        return str(self.__cause__) if self.__cause__ else ''
+        pass
 
     def __reduce__(self) -> object:  # type: ignore
         # "prime" the cached properties before pickling
@@ -107,7 +103,7 @@ class FeedError(ReaderError):
 
     @property
     def _str(self) -> str:
-        return repr(self.url)
+        pass
 
     @property
     def resource_id(self) -> tuple[str]:
@@ -116,7 +112,7 @@ class FeedError(ReaderError):
         .. versionadded:: 2.17
 
         """
-        return (self.url,)
+        pass
 
 
 class FeedExistsError(FeedError):
@@ -163,7 +159,7 @@ class EntryError(ReaderError):
 
     @property
     def _str(self) -> str:
-        return repr((self.feed_url, self.id))
+        pass
 
     @property
     def resource_id(self) -> tuple[str, str]:
@@ -172,7 +168,7 @@ class EntryError(ReaderError):
         .. versionadded:: 2.17
 
         """
-        return self.feed_url, self.id
+        pass
 
 
 class EntryExistsError(EntryError):
@@ -268,13 +264,7 @@ class SingleUpdateHookError(UpdateHookError):
 
     @property
     def _str(self) -> str:
-        parts = [self.when, repr(self.hook)]
-        if self.resource_id is not None:
-            if len(self.resource_id) == 1:
-                parts.append(repr(self.resource_id[0]))
-            else:
-                parts.append(repr(self.resource_id))
-        return ': '.join(parts)
+        pass
 
 
 _UpdateHookErrorT = TypeVar('_UpdateHookErrorT', bound=UpdateHookError)
@@ -300,7 +290,7 @@ class UpdateHookErrorGroup(ExceptionGroup[_UpdateHookErrorT], UpdateHookError):
     def derive(  # type: ignore[override]
         self, excs: Sequence[_UpdateHookErrorT], /
     ) -> ExceptionGroup[_UpdateHookErrorT]:
-        return UpdateHookErrorGroup(self.message, excs)
+        pass
 
 
 class StorageError(ReaderError):
@@ -383,8 +373,7 @@ class TagError(ReaderError):
 
     @property
     def _str(self) -> str:
-        parts = self.resource_id + (self.key,)
-        return ': '.join(repr(part) for part in parts)
+        pass
 
 
 class TagNotFoundError(TagError):

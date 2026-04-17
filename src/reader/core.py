@@ -549,11 +549,7 @@ class Reader:
             The ``old`` and ``new`` arguments are now positional-only.
 
         """
-        old_str = _feed_argument(old)
-        new_str = _feed_argument(new)
-        if not allow_invalid_url:
-            self._parser.validate_url(new_str)
-        self._storage.change_feed_url(old_str, new_str)
+        pass
 
     def get_feeds(
         self,
@@ -769,8 +765,7 @@ class Reader:
             The ``feed`` argument is now positional-only.
 
         """
-        url = _feed_argument(feed)
-        self._storage.set_feed_updates_enabled(url, True)
+        pass
 
     def disable_feed_updates(self, feed: FeedInput, /) -> None:
         """Disable updates for a feed.
@@ -1303,12 +1298,7 @@ class Reader:
             The ``source`` keyword argument.
 
         """
-
-        filter = EntryFilter.from_args(
-            feed, entry, read, important, has_enclosures, source, tags, feed_tags
-        )
-        now = self._now()
-        return self._storage.get_entry_counts(now, filter)
+        pass
 
     def set_entry_read(
         self,
@@ -1397,7 +1387,7 @@ class Reader:
             The ``entry`` argument is now positional-only.
 
         """
-        return self.set_entry_read(entry, False)
+        pass
 
     def set_entry_important(
         self,
@@ -1470,7 +1460,7 @@ class Reader:
             The ``entry`` argument is now positional-only.
 
         """
-        self.set_entry_important(entry, True)
+        pass
 
     def mark_entry_as_unimportant(self, entry: EntryInput, /) -> None:
         """Mark an entry as unimportant.
@@ -1491,7 +1481,7 @@ class Reader:
             The ``entry`` argument is now positional-only.
 
         """
-        return self.set_entry_important(entry, False)
+        pass
 
     def add_entry(self, entry: Any, /, *, overwrite: bool = False) -> None:
         """Add a new entry to an existing feed.
@@ -1695,7 +1685,7 @@ class Reader:
             SearchError
 
         """
-        return self._search.disable()
+        pass
 
     def is_search_enabled(self) -> bool:
         """Check if full-text search is enabled.
@@ -1707,7 +1697,7 @@ class Reader:
             SearchError
 
         """
-        return self._search.is_enabled()
+        pass
 
     def update_search(self) -> None:
         """Update the full-text search index.
@@ -1929,12 +1919,7 @@ class Reader:
             The ``source`` keyword argument.
 
         """
-
-        filter = EntryFilter.from_args(
-            feed, entry, read, important, has_enclosures, source, tags, feed_tags
-        )
-        now = self._now()
-        return self._search.search_entry_counts(query, now, filter)
+        pass
 
     def get_tags(
         self, resource: ResourceInput, /, *, key: str | None = None
@@ -2174,12 +2159,7 @@ class Reader:
             The ``resource`` and ``key`` arguments are now positional-only.
 
         """
-        resource_id = _resource_argument(resource)
-        try:
-            self._storage.delete_tag(resource_id, key)
-        except TagNotFoundError:
-            if not missing_ok:
-                raise
+        pass
 
     def make_reader_reserved_name(self, key: str, /) -> str:
         """Create a *reader*-reserved tag name.
@@ -2244,7 +2224,7 @@ class Reader:
             The ``plugin_name`` and ``key`` arguments are now positional-only.
 
         """
-        return self._reserved_name_scheme.make_plugin_name(plugin_name, key)
+        pass
 
     # Ideally, the getter would return a TypedDict,
     # but the setter would take *any* Mapping[str, str];
@@ -2265,14 +2245,11 @@ class Reader:
         .. versionadded:: 1.17
 
         """
-        return MappingProxyType(self._reserved_name_scheme.__dict__)
+        pass
 
     @reserved_name_scheme.setter
     def reserved_name_scheme(self, value: Mapping[str, str]) -> None:
-        try:
-            self._reserved_name_scheme = NameScheme.from_value(value)
-        except Exception as e:
-            raise AttributeError(f"invalid reserved name scheme: {value}") from e
+        pass
 
     @property
     def before_feeds_update_hooks(self) -> MutableSequence[FeedsUpdateHook]:
@@ -2296,7 +2273,7 @@ class Reader:
             Wrap unexpected exceptions in :exc:`UpdateHookError`.
 
         """
-        return self._update_hooks.hooks['before_feeds_update']
+        pass
 
     @property
     def before_feed_update_hooks(self) -> MutableSequence[FeedUpdateHook]:
@@ -2320,7 +2297,7 @@ class Reader:
             Wrap unexpected exceptions in :exc:`UpdateHookError`.
 
         """
-        return self._update_hooks.hooks['before_feed_update']
+        pass
 
     @property
     def after_entry_update_hooks(self) -> MutableSequence[AfterEntryUpdateHook]:
@@ -2357,7 +2334,7 @@ class Reader:
             Try to run all hooks, don't stop after one fails.
 
         """
-        return self._update_hooks.hooks['after_entry_update']
+        pass
 
     @property
     def after_feed_update_hooks(self) -> MutableSequence[FeedUpdateHook]:
@@ -2383,7 +2360,7 @@ class Reader:
             Try to run all hooks, don't stop after one fails.
 
         """
-        return self._update_hooks.hooks['after_feed_update']
+        pass
 
     @property
     def after_feeds_update_hooks(self) -> MutableSequence[FeedsUpdateHook]:
@@ -2409,4 +2386,4 @@ class Reader:
             Try to run all hooks, don't stop after one fails.
 
         """
-        return self._update_hooks.hooks['after_feeds_update']
+        pass

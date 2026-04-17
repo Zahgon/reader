@@ -92,16 +92,7 @@ class EntriesMixin(StorageBase):
         now: datetime,
         filter: EntryFilter = EntryFilter(),  # noqa: B008
     ) -> EntryCounts:
-        entries_query = Query().SELECT('id', 'feed').FROM('entries')
-        context = entry_filter(entries_query, filter)
-
-        query, new_context = get_entry_counts_query(
-            now, self.entry_counts_average_periods, entries_query
-        )
-        context.update(new_context)
-
-        row = exactly_one(self.get_db().execute(str(query), context))
-        return EntryCounts(*row[:5], row[5:8])  # type: ignore[call-arg]
+        pass
 
     @wrap_exceptions()
     def set_entry_read(
@@ -314,7 +305,7 @@ class EntriesMixin(StorageBase):
 
     def add_or_update_entry(self, intent: EntryUpdateIntent) -> None:
         # TODO: this method is for testing convenience only, maybe delete it?
-        self.add_or_update_entries([intent])
+        pass
 
     @wrap_exceptions()
     def add_entry(self, intent: EntryUpdateIntent) -> None:
@@ -382,125 +373,17 @@ class EntriesMixin(StorageBase):
     def set_entry_recent_sort(
         self, entry: tuple[str, str], recent_sort: datetime
     ) -> None:
-        feed_url, entry_id = entry
-        with self.get_db() as db:
-            cursor = db.execute(
-                """
-                UPDATE entries
-                SET
-                    recent_sort = :recent_sort
-                WHERE feed = :feed_url AND id = :entry_id;
-                """,
-                dict(
-                    feed_url=feed_url,
-                    entry_id=entry_id,
-                    recent_sort=adapt_datetime(recent_sort),
-                ),
-            )
-        rowcount_exactly_one(cursor, lambda: EntryNotFoundError(feed_url, entry_id))
+        pass
 
 
 def get_entries_query(
     filter: EntryFilter, sort: EntrySort
 ) -> tuple[Query, dict[str, Any]]:
-    query = (
-        Query()
-        .SELECT(*"""
-            entries.feed
-            feeds.updated
-            feeds.title
-            feeds.link
-            feeds.author
-            feeds.subtitle
-            feeds.version
-            feeds.user_title
-            feeds.added
-            feeds.last_updated
-            feeds.last_exception
-            feeds.updates_enabled
-            feeds.update_after
-            feeds.last_retrieved
-            entries.id
-            entries.updated
-            entries.title
-            entries.link
-            entries.author
-            entries.published
-            entries.summary
-            entries.content
-            entries.enclosures
-            entries.source
-            entries.read
-            entries.read_modified
-            entries.important
-            entries.important_modified
-            entries.first_updated
-            entries.added_by
-            entries.last_updated
-            entries.original_feed
-            entries.sequence
-        """.split())
-        .FROM("entries")
-        .JOIN("feeds ON feeds.url = entries.feed")
-    )  # fmt: skip
-    context = entry_filter(query, filter)
-    ENTRIES_SORT[sort](query)
-    return query, context
+    pass
 
 
 def entry_factory(row: tuple[Any, ...]) -> Entry:
-    feed = feed_factory(row[0:14])
-    (
-        id,
-        updated,
-        title,
-        link,
-        author,
-        published,
-        summary,
-        content,
-        enclosures,
-        source,
-        read,
-        read_modified,
-        important,
-        important_modified,
-        first_updated,
-        added_by,
-        last_updated,
-        original_feed,
-        sequence,
-    ) = row[14:33]
-
-    source_obj = None
-    if source:
-        source_dict = json.loads(source)
-        if source_dict['updated']:
-            source_dict['updated'] = convert_timestamp(source_dict['updated'])
-        source_obj = EntrySource(**source_dict)
-
-    return Entry(
-        id,
-        convert_timestamp(updated) if updated else None,
-        title,
-        link,
-        author,
-        convert_timestamp(published) if published else None,
-        summary,
-        tuple(Content(**d) for d in json.loads(content)) if content else (),
-        tuple(Enclosure(**d) for d in json.loads(enclosures)) if enclosures else (),
-        source_obj,
-        read == 1,
-        convert_timestamp(read_modified) if read_modified else None,
-        important == 1 if important is not None else None,
-        convert_timestamp(important_modified) if important_modified else None,
-        convert_timestamp(first_updated),
-        added_by,
-        convert_timestamp(last_updated),
-        original_feed or feed.url,
-        sequence,
-        feed,
-    )
+    pass
 
 
 TRISTATE_FILTER_TO_SQL = dict(
@@ -572,13 +455,7 @@ ENTRY_SORT_KEYS = {EntrySort.RECENT: RECENT_SORT_KEY}
 def entries_recent_sort(
     query: Query, keyword: str = 'WHERE', id_prefix: str = 'entries.'
 ) -> None:
-    ids_query = Query().FROM('entries').scrolling_window_sort_key(RECENT_SORT_KEY)
-    query.with_('ids', str(ids_query))
-    query.JOIN(f"ids ON (ids.id, ids.feed) = ({id_prefix}id, {id_prefix}feed)")
-
-    ids_names = RECENT_SORT_KEY.names('ids.')
-    query.SELECT(*ids_names)
-    query.scrolling_window_order_by(*ids_names, desc=True, keyword=keyword)
+    pass
 
 
 def entries_random_sort(query: Query) -> None:
@@ -589,7 +466,7 @@ def entries_random_sort(query: Query) -> None:
     # This is a separate function in the hope that search
     # can benefit from future optimizations.
     #
-    query.ORDER_BY("random()")
+    pass
 
 
 ENTRIES_SORT: dict[EntrySort, Callable[[Query], None]] = {
@@ -603,54 +480,7 @@ def get_entry_counts_query(
     average_periods: tuple[float, ...],
     entries_query: Query,
 ) -> tuple[Query, dict[str, Any]]:
-    query = (
-        Query()
-        .with_('entries_filtered', str(entries_query))
-        .SELECT(
-            'count(*)',
-            'coalesce(sum(read == 1), 0)',
-            'coalesce(sum(important == 1), 0)',
-            'coalesce(sum(important == 0), 0)',
-            """
-            coalesce(
-                sum(
-                    NOT (
-                        json_array_length(entries.enclosures) IS NULL OR json_array_length(entries.enclosures) = 0
-                    )
-                ), 0
-            )
-            """,
-        )
-        .FROM("entries_filtered")
-        .JOIN("entries USING (id, feed)")
-    )
-    # one CTE / period + HAVING in the CTE is a tiny bit faster than
-    # one CTE + WHERE in the SELECT
-
-    context: dict[str, Any] = dict(now=adapt_datetime(now))
-
-    for period_i, period_days in enumerate(average_periods):
-        # TODO: when we get first_updated, use it instead of first_updated_epoch
-
-        days_param = f'kfu_{period_i}_days'
-        context[days_param] = float(period_days)
-
-        start_param = f'kfu_{period_i}_start'
-        context[start_param] = adapt_datetime(now - timedelta(days=period_days))
-
-        kfu_query = (
-            Query()
-            .SELECT('coalesce(published, updated, first_updated_epoch) AS kfu')
-            .FROM('entries_filtered')
-            .JOIN("entries USING (id, feed)")
-            .GROUP_BY('published, updated, first_updated_epoch, feed')
-            .HAVING(f"kfu BETWEEN :{start_param} AND :now")
-        )
-
-        query.with_(f'kfu_{period_i}', str(kfu_query))
-        query.SELECT(f"(SELECT count(*) / :{days_param} FROM kfu_{period_i})")
-
-    return query, context
+    pass
 
 
 def entry_update_intent_to_dict(intent: EntryUpdateIntent) -> dict[str, Any]:

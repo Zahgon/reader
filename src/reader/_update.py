@@ -92,14 +92,7 @@ class Decider:
         result: ParseResult[FeedForUpdate, ParseError],
         entry_pairs: EntryPairs,
     ) -> tuple[FeedUpdateIntent, Iterable[EntryUpdateIntent]]:
-        decider = cls(
-            old_feed,
-            now,
-            global_now,
-            config,
-            PrefixLogger(log, ["update feed %r" % old_feed.url]),
-        )
-        return decider.update(result, entry_pairs)
+        pass
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -108,11 +101,11 @@ class Decider:
 
     @property
     def url(self) -> str:
-        return self.old_feed.url
+        pass
 
     @property
     def stale(self) -> bool:
-        return self.old_feed.stale
+        pass
 
     def should_update_feed(self, new: FeedData, entries_to_update: bool) -> bool:
         old = self.old_feed
@@ -430,53 +423,11 @@ class Pipeline:
         config: UpdateConfig,
         result: ParseResult[FeedForUpdate, ParseError],
     ) -> tuple[str, UpdatedFeed | None | Exception]:
-        feed, value, _ = result
-
-        # TODO: don't duplicate code from update()
-        # TODO: the feed tag value should come from get_feeds_for_update()
-        config_key = self.reader.make_reader_reserved_name(CONFIG_KEY)
-        config = flatten_config(self.reader.get_tag(feed, config_key, {}), config)
-
-        make_intents = partial(
-            self.decider.make_intents,
-            feed,
-            self.reader._now(),
-            self.global_now,
-            config,
-            result,
-        )
-
-        try:
-            # assemble pipeline
-            if value and not isinstance(value, Exception):
-                entry_pairs = self.get_entry_pairs(value)
-                entry_pairs = self.reader._parser.process_entry_pairs(
-                    feed.url, value.mime_type, entry_pairs
-                )
-                entry_pairs, get_total_count = count_consumed(entry_pairs)
-            else:
-                entry_pairs = ()
-                get_total_count = lambda: 0  # noqa: E731
-
-            intents = make_intents(entry_pairs)
-            counts = self.update_feed(*intents)
-            total = get_total_count()
-
-        except Exception as e:
-            return feed.url, e
-
-        if not value or isinstance(value, Exception):
-            return feed.url, value
-
-        return feed.url, UpdatedFeed(feed.url, *counts, total - sum(counts))
+        pass
 
     def get_entry_pairs(self, result: ParsedFeed) -> EntryPairs:
         # give storage a chance to consume entries in a streaming fashion
-        entries1, entries2 = tee(result.entries)
-        entries_for_update = self.reader._storage.get_entries_for_update(
-            (e.feed_url, e.id) for e in entries1
-        )
-        return zip(entries2, entries_for_update, strict=True)
+        pass
 
     def update_feed(
         self,

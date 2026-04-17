@@ -102,24 +102,7 @@ def _get_alternates(soup, url, selector):
 
 @blueprint.route('/preview-feed-list')
 def feed_list():
-    url = request.args['url']
-
-    session = get_reader()._parser.session_factory()
-
-    # TODO: url may not actually be an http URL; now we get "error: Invalid URL 'file.xml': No schema supplied. ..."
-    # if https://github.com/lemon24/reader/issues/155#issuecomment-647048623 gets implemented,
-    # we should delegate to the parser "give me the content of this URL"
-
-    try:
-        response = session.get(url)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        # TODO: maybe handle this with flash + 404 (and let the handler show the message)
-        return render_template('preview_feed_list.html', url=url, errors=[str(e)])
-
-    alternates = list(get_alternates(response.content, url))
-
-    return render_template('preview_feed_list.html', url=url, alternates=alternates)
+    pass
 
 
 class GotPreviewParseError(Exception):
@@ -129,28 +112,12 @@ class GotPreviewParseError(Exception):
 @got_preview_parse_error.connect
 def raise_got_preview_parse_error(error):
     # TODO: ParseError should be more specific, it should be clear if retrieving or parsing failed
-    function_names = {f.name for f in traceback.extract_tb(error.__traceback__)}
-    if 'process_feed_for_update' in function_names:
-        return
-    if 'retrieve' in function_names:
-        return
-
-    if error.url.startswith('http:') or error.url.startswith('https:'):
-        raise GotPreviewParseError() from error
+    pass
 
 
 @blueprint.app_errorhandler(GotPreviewParseError)
 def handle_parse_error_i_guess(error):
-    parse_error = error.__cause__
-
-    if request.url_rule.endpoint != 'reader.preview':
-        raise error
-
-    # TODO: we should check if we got a requests exception, and not redirect then
-    # we can't reuse the text of the original response, because parser is using streaming=True;
-    # TODO: maybe we should still expose the response on the exception, we could at least reuse the status code
-
-    return redirect(url_for('preview_feed_list.feed_list', url=parse_error.url))
+    pass
 
 
 def init_app(app):

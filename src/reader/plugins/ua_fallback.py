@@ -32,32 +32,7 @@ log = logging.getLogger(__name__)
 
 
 def _ua_fallback_response_hook(session, response, request, **kwargs):
-    if not response.status_code == 403:
-        return None
-
-    ua = request.headers.get('User-Agent', session.headers.get('User-Agent'))
-    if not ua:  # pragma: no cover
-        return None
-
-    # lazy import (https://github.com/lemon24/reader/issues/297)
-    from .._parser.feedparser import feedparser
-
-    ua_prefix = feedparser.USER_AGENT.partition(" ")[0]
-    request.headers['User-Agent'] = f'{ua_prefix} {ua}'
-
-    log_headers = {
-        h: response.headers[h] for h in _LOG_HEADERS if h in response.headers
-    }
-    log.info(
-        "%s: got status code %i, "
-        "retrying with feedparser User-Agent; "
-        "relevant response headers: %s",
-        request.url,
-        response.status_code,
-        log_headers,
-    )
-
-    return request
+    pass
 
 
 def init_reader(reader):

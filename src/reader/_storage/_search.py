@@ -214,19 +214,12 @@ class Search:
 
     @wrap_exceptions()
     def is_enabled(self) -> bool:
-        return self._is_enabled(self.get_db())
+        pass
 
     @classmethod
     def _is_enabled(cls, db: sqlite3.Connection) -> bool:
         # Private API, may be called from migrations.
-        try:
-            cls._enabled_check(db)
-        except sqlite3.OperationalError as e:
-            if "no such table: entries_search" not in str(e):  # pragma: no cover
-                raise
-            return False
-        else:
-            return True
+        pass
 
     @staticmethod
     def _enabled_check(db: sqlite3.Connection) -> None:
@@ -493,31 +486,7 @@ class Search:
         now: datetime,
         filter: EntryFilter = EntryFilter(),  # noqa: B008
     ) -> EntrySearchCounts:
-        entries_query = (
-            Query()
-            .with_(
-                "search",
-                """
-                SELECT _id, _feed
-                FROM entries_search
-                WHERE entries_search MATCH :query
-                GROUP BY _id, _feed
-                """,
-            )
-            .SELECT('id', 'feed')
-            .FROM('entries')
-            .JOIN("search ON (id, feed) = (_id, _feed)")
-        )
-        query_context = _entries.entry_filter(entries_query, filter)
-
-        sql_query, new_context = _entries.get_entry_counts_query(
-            now, self.storage.entry_counts_average_periods, entries_query
-        )
-        query_context.update(new_context)
-
-        context = dict(query=query, **query_context)
-        row = exactly_one(self.get_db().execute(str(sql_query), context))
-        return EntrySearchCounts(*row[:5], row[5:8])  # type: ignore[call-arg]
+        pass
 
 
 def make_search_entries_query(
@@ -572,9 +541,7 @@ def make_search_entries_query(
 
 
 def relevant_sort(query: Query) -> None:
-    query.scrolling_window_order_by(
-        'rank', 'search._feed', 'search._id', keyword='HAVING'
-    )
+    pass
 
 
 SEARCH_ENTRIES_SORT: dict[EntrySearchSort, Callable[[Query], None]] = {
@@ -589,21 +556,4 @@ SEARCH_ENTRIES_SORT: dict[EntrySearchSort, Callable[[Query], None]] = {
 def entry_search_result_factory(
     t: tuple[Any, ...], extract: Callable[[str], HighlightedString]
 ) -> EntrySearchResult:
-    entry_id, feed_url, rank, title, feed_title, is_feed_user_title, content, *_ = t
-    content = json.loads(content)
-
-    metadata = {}
-    if title:
-        metadata['.title'] = extract(title)
-    if feed_title:
-        path = FEED_TITLE_PATHS[is_feed_user_title]
-        metadata[path] = extract(feed_title)
-
-    rv_content = {c['path']: extract(c['value']) for c in content if c['path']}
-
-    return EntrySearchResult(
-        feed_url,
-        entry_id,
-        MappingProxyType(metadata),
-        MappingProxyType(rv_content),
-    )
+    pass

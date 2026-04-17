@@ -167,7 +167,7 @@ def init_reader(reader):
 
 
 def after_feed_update(reader, feed):
-    Deduplicator(reader, feed).deduplicate()
+    pass
 
 
 class Deduplicator:
@@ -178,22 +178,7 @@ class Deduplicator:
 
     def deduplicate(self):
         # if optimizing for memory, this should get only metadata (no content)
-        all = list(self.reader.get_entries(feed=self.feed))
-        all_by_id = {e.id: e for e in all}
-        # if optimizing for memory, this should wrap the method (with content)
-        get_entry = all_by_id.get
-
-        config = self.config_cls(self.feed, all, get_entry)
-        if config.tag:
-            log.info("entry_dedupe: %r for feed %r", config.tag, self.feed.url)
-
-        for group in config.find_duplicates():
-            assert len(group) > 1, [e.id for e in group]
-            entry, *duplicates = group
-            dedupe_entries(self.reader, entry, duplicates)
-
-        if config.tag:
-            self.clear_feed_request()
+        pass
 
     @cached_property
     def feed(self):
@@ -201,25 +186,14 @@ class Deduplicator:
 
     @cached_property
     def feed_tags(self):
-        return frozenset(self.reader.get_tag_keys(self.feed))
+        pass
 
     @cached_property
     def config_cls(self):
-        for config in CONFIGS:
-            if not config.tag:
-                continue
-            tag = self.reader.make_reader_reserved_name(config.tag)
-            if tag in self.feed_tags:
-                return config
-        return Config
+        pass
 
     def clear_feed_request(self):
-        for config in reversed(CONFIGS):
-            if not config.tag:
-                continue
-            tag = self.reader.make_reader_reserved_name(config.tag)
-            if tag in self.feed_tags:
-                self.reader.delete_tag(self.feed, tag, missing_ok=True)
+        pass
 
 
 # heuristics for finding duplicates
@@ -381,101 +355,15 @@ class Config:
         self.get_entry = get_entry
 
     def find_duplicates(self):
-        all = {e.id: e for e in self.entries}
-        new = {e.id: e for e in self.new_entries}
-        duplicates = []
-
-        for grouper in self.groupers:
-            grouper_duplicates = []
-
-            log.debug("grouper %s: all=%d new=%d", grouper.__name__, len(all), len(new))
-
-            groups = list(grouper(all.values(), new.values()))
-            counts = Counter(map(len, groups))
-            log.debug(
-                "grouper %s: group count by size %r", grouper.__name__, dict(counts)
-            )
-
-            for group in groups:
-                if len(group) == 1:
-                    continue
-
-                # grouper is not a good heuristic for this group, skip it
-                if len(group) > self.max_candidate_group_size:  # pragma: no cover
-                    log.debug(
-                        "grouper %s: found group of size %d > %d, skipping: %r",
-                        grouper.__name__,
-                        len(group),
-                        self.max_candidate_group_size,
-                        [e.id for e in group],
-                    )
-                    continue
-
-                # in practice, sorting by group may be enough, but eh...
-
-                ds = DisjointSet()
-                for one, two in itertools.combinations(group, 2):
-                    if self.is_duplicate(one, two):
-                        ds.add(one, two)
-
-                for subgroup in ds.subsets():
-                    subgroup = sorted(subgroup, key=self.latest_key, reverse=True)
-
-                    if len(subgroup) > self.max_group_size:
-                        log.debug(
-                            "grouper %s: found group of size %d > %d, skipping: %r",
-                            grouper.__name__,
-                            len(subgroup),
-                            self.max_group_size,
-                            [e.id for e in subgroup],
-                        )
-                        continue
-
-                    grouper_duplicates.append(subgroup)
-
-                    # don't use these entries with other groupers
-                    for e in subgroup:
-                        all.pop(e.id, None)
-                        new.pop(e.id, None)
-
-            if log.isEnabledFor(logging.DEBUG):
-                log.debug(
-                    "grouper %s: found %r",
-                    grouper.__name__,
-                    [[e.id for e in ds] for ds in grouper_duplicates],
-                )
-            if grouper_duplicates:
-                log.info(
-                    "grouper %s: found %d duplicate groups",
-                    grouper.__name__,
-                    len(grouper_duplicates),
-                )
-
-            duplicates.extend(grouper_duplicates)
-
-            if not new:
-                log.debug("no new entries remaining, not trying other groupers")
-                break
-        else:
-            log.debug("no groupers remaining: all=%d new=%d", len(all), len(new))
-
-        if duplicates:
-            log.info("found %d duplicate groups", len(duplicates))
-
-        return duplicates
+        pass
 
     @cached_property
     def new_entries(self):
-        return [e for e in self.entries if e.added == self.feed.last_updated]
+        pass
 
     @property
     def groupers(self):
-        return [
-            link_grouper,
-            title_grouper,
-            published_grouper,
-            title_strip_prefix_grouper,
-        ]
+        pass
 
     @cached_property
     def is_duplicate(self):
@@ -504,7 +392,7 @@ class Config:
         #
         # also see test_duplicates_in_feed / #340.
         #
-        return e.updated or e.published or _EPOCH, e.last_updated, e.id
+        pass
 
 
 class OnceConfig(Config):
@@ -512,12 +400,12 @@ class OnceConfig(Config):
 
     @property
     def new_entries(self):
-        return self.entries
+        pass
 
     @staticmethod
     def latest_key(e):
         # keep the latest entry, consider the rest duplicates
-        return e.last_updated, e.updated or e.published or _EPOCH, e.id
+        pass
 
 
 class OnceNoContentConfig(OnceConfig):
@@ -539,7 +427,7 @@ class OnceTitleConfig(OnceNoContentConfig):
 
     @property
     def groupers(self):
-        return [title_grouper]
+        pass
 
 
 class OnceTitlePrefixConfig(OnceNoContentConfig):
@@ -547,7 +435,7 @@ class OnceTitlePrefixConfig(OnceNoContentConfig):
 
     @property
     def groupers(self):
-        return [title_grouper, title_strip_prefix_grouper]
+        pass
 
 
 class OnceLinkConfig(OnceNoContentConfig):
@@ -555,7 +443,7 @@ class OnceLinkConfig(OnceNoContentConfig):
 
     @property
     def groupers(self):
-        return [link_grouper]
+        pass
 
 
 # ordered by strictness (strictest tag first)
@@ -563,19 +451,11 @@ CONFIGS = [Config, OnceConfig, OnceTitleConfig, OnceLinkConfig, OnceTitlePrefixC
 
 
 def title_grouper(entries, new_entries):
-    return group_by(lambda e: tokenize_title(e.title), entries, new_entries)
+    pass
 
 
 def title_strip_prefix_grouper(entries, new_entries):
-    new_entry_ids = {e.id for e in new_entries}
-    strip = StripPrefixTokenizer((e.title for e in new_entries), tokenize_title)
-
-    def key(e):
-        if e.id in new_entry_ids:
-            return strip(e.title)
-        return tokenize_title(e.title)
-
-    return group_by(key, entries, new_entries)
+    pass
 
 
 # there was an unreleased[1] title similarity grouper,
@@ -596,7 +476,7 @@ def title_strip_prefix_grouper(entries, new_entries):
 
 
 def link_grouper(entries, new_entries):
-    return group_by(lambda e: normalize_url(e.link), entries, new_entries)
+    pass
 
 
 def normalize_url(url):
@@ -619,13 +499,7 @@ def normalize_url(url):
 
 
 def published_grouper(entries, new_entries):
-    def key(e):
-        dt = e.published or e.updated
-        if not dt:
-            return None
-        return dt.isoformat(timespec='seconds')
-
-    return group_by(key, entries, new_entries)
+    pass
 
 
 # there was an unreleased[1] published day grouper,
@@ -725,71 +599,17 @@ def tokenize_content_fields(entry):
 
 
 def dedupe_entries(reader, entry, duplicates):
-    log.info(
-        "entry_dedupe: %r (title: %r) duplicates: %r",
-        entry.resource_id,
-        entry.title,
-        [e.id for e in duplicates],
-    )
-
-    # don't do anything until we know all actions were generated successfully
-    actions = list(make_dedupe_actions(reader, entry, duplicates))
-    # TODO: what if this fails with EntryNotFoundError?
-    # either the entry was deleted (abort),
-    # or a duplicate was deleted (start over with the other duplicates, if any)
-
-    try:
-        for action in actions:
-            action()
-            log.info("entry_dedupe: %s", action)
-    except EntryNotFoundError as e:  # pragma: no cover
-        if entry.resource_id != e.resource_id:
-            raise
-        log.info("entry_dedupe: entry %r was deleted, aborting", entry.resource_id)
+    pass
 
 
 def make_dedupe_actions(reader, entry, duplicates):
 
-    def make_flag_args(name):
-        def flag(e):
-            return getattr(e, name), getattr(e, f'{name}_modified')
-
-        return merge_flags(flag(entry), list(map(flag, duplicates)))
-
-    if args := make_flag_args('read'):
-        yield partial(reader.set_entry_read, entry, *args)
-
-    if args := make_flag_args('important'):
-        yield partial(reader.set_entry_important, entry, *args)
-
-    tags = merge_tags(
-        reader.make_reader_reserved_name,
-        dict(reader.get_tags(entry)),
-        map(dict, map(reader.get_tags, duplicates)),
-    )
-    for key, value in tags:
-        yield partial(reader.set_tag, entry, key, value)
-
-    duplicate_ids = [d.resource_id for d in duplicates]
-    all_ids = [entry.resource_id] + duplicate_ids
-
-    yield partial(
-        reader._storage.set_entry_recent_sort,
-        entry.resource_id,
-        min(map(reader._storage.get_entry_recent_sort, all_ids)),
-    )
-
-    # any changes to the duplicates must happen at the end
-    yield partial(reader._storage.delete_entries, duplicate_ids)
+    pass
 
 
 def merge_flags(entry, duplicates):
     def key(flag):
-        value, modified = flag
-        return (
-            value if value is not None else -1,
-            (-modified.timestamp() if modified else float('-inf')),
-        )
+        pass
 
     new = sorted([entry] + duplicates, key=key)[-1]
 
@@ -979,19 +799,13 @@ def common_prefixes(documents, *, min_df=4, min_length=5):
     max_decrease_ratio = 3
 
     def is_not_frequent_enough(node, _):
-        return node.value < min_df
+        pass
 
     def is_sharp_decrease(node, parents):
-        sharp_decrease = parents[-1].value / node.value >= max_decrease_ratio
-        prefix_long_enough = sum(len(p.key) for p in parents) >= min_length
-        return sharp_decrease and prefix_long_enough
+        pass
 
     def keep_frequent_subprefix(node, _):
-        if not node.children:
-            return
-        remaining = node.value - sum(c.value for c in node.children)
-        if remaining >= min_df:
-            node.insert(('',), remaining)
+        pass
 
     # duplicate documents are not a prefix by themselves
     unique_documents = dict.fromkeys(documents)
@@ -1046,8 +860,7 @@ class DisjointSet:
             self._subsets[n] = x_subset
 
     def subsets(self):
-        unique_subsets = {id(s): s for s in self._subsets.values()}
-        return [set(s) for s in unique_subsets.values()]
+        pass
 
 
 class Trie:
@@ -1059,11 +872,11 @@ class Trie:
 
     @property
     def key(self):
-        return self._key
+        pass
 
     @property
     def children(self):
-        return self._children.values()
+        pass
 
     def insert(self, keys, value):
         rv = []

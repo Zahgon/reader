@@ -542,21 +542,7 @@ class LocalConnectionFactory:
 
     @classmethod
     def _close(cls, db: sqlite3.Connection, read_only: bool = False) -> None:
-        try:
-            try:
-                cls._optimize(db, read_only)
-            finally:
-                db.close()
-        except sqlite3.ProgrammingError as e:
-            message = str(e).lower()
-            # calling close() a second time is a noop
-            if "cannot operate on a closed database" in message:  # pragma: no cover
-                return
-            # can't close() a connection from a thread that didn't create it;
-            # SQLAlchemy ignores this as well in SingletonThreadPool.dispose()
-            if "objects created in a thread" in message:  # pragma: no cover
-                return
-            raise
+        pass
 
     @staticmethod
     def _optimize(
@@ -789,7 +775,7 @@ def _make_debug_connection_cls():  # pragma: no cover
                 trace_wrapper = _make_debug_method_wrapper('~trace', stmt=True)
 
                 def trace(stmt):
-                    return trace_wrapper(self, stmt)
+                    pass
 
                 self.set_trace_callback(trace)
 

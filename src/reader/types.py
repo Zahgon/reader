@@ -157,7 +157,7 @@ class Feed(_namedtuple_compat):
         .. versionadded:: 2.17
 
         """
-        return (self.url,)
+        pass
 
     @property
     def resolved_title(self) -> str | None:
@@ -166,7 +166,7 @@ class Feed(_namedtuple_compat):
         .. versionadded:: 3.16
 
         """
-        return self.user_title or self.title
+        pass
 
 
 @dataclass(frozen=True)
@@ -219,7 +219,7 @@ class Entry(_namedtuple_compat):
     @property
     def feed_url(self) -> str:
         """The feed URL."""
-        return self.feed.url
+        pass
 
     # TODO: .id will still be set to some default value if the entry doesn't have it; document this.
 
@@ -346,7 +346,7 @@ class Entry(_namedtuple_compat):
         .. versionadded:: 2.17
 
         """
-        return self.feed_url, self.id
+        pass
 
     @property
     def updated_not_none(self) -> datetime:
@@ -359,7 +359,7 @@ class Entry(_namedtuple_compat):
             Identical to the behavior of :attr:`updated` before 2.0.
 
         """
-        return self.updated or self.added
+        pass
 
     def get_content(self, *, prefer_summary: bool = False) -> Content | None:
         """Return a text content OR the summary.
@@ -375,7 +375,7 @@ class Entry(_namedtuple_compat):
         .. versionadded:: 2.12
 
         """
-        return _get_entry_content(self, prefer_summary)
+        pass
 
     @property
     def feed_resolved_title(self) -> str | None:
@@ -388,18 +388,7 @@ class Entry(_namedtuple_compat):
             Return both the source and feed titles only if they are different.
 
         """
-        title = self.feed.resolved_title
-        source = self.source
-        source_title = source.title if source else None
-        if self.feed.title == source_title:
-            source_title = None
-        if title == source_title:
-            source_title = None
-        if not source_title:
-            return title
-        if not title:
-            return source_title
-        return f"{source_title} ({title})"
+        pass
 
 
 @dataclass(frozen=True)
@@ -425,9 +414,7 @@ class Content(_namedtuple_compat):
 
         .. versionadded:: 2.12
         """
-        if self.type:
-            return self.type in _HTML_CONTENT_TYPES
-        return True
+        pass
 
 
 _PREFERRED_CONTENT_TYPES = ['text/html', 'text/xhtml', 'text/plain', None]
@@ -569,35 +556,7 @@ class HighlightedString:
             HighlightedString: A highlighted string.
 
         """
-        pattern = f"({'|'.join(re.escape(s) for s in (before, after))})"
-
-        parts = []
-        slices = []
-
-        index = 0
-        start = None
-
-        for part in re.split(pattern, text):
-            if part == before:
-                if start is not None:
-                    raise ValueError("highlight start marker in highlight")
-                start = index
-                continue
-
-            if part == after:
-                if start is None:
-                    raise ValueError("unmatched highlight end marker")
-                slices.append(slice(start, index))
-                start = None
-                continue
-
-            parts.append(part)
-            index += len(part)
-
-        if start is not None:
-            raise ValueError("highlight is never closed")
-
-        return cls(''.join(parts), tuple(slices))
+        pass
 
     def split(self) -> Iterable[str]:
         """Split the highlighted string into parts.
@@ -704,7 +663,7 @@ class EntrySearchResult(_namedtuple_compat):
         .. versionadded:: 2.17
 
         """
-        return self.feed_url, self.id
+        pass
 
 
 class EntryUpdateStatus(enum.Enum):
@@ -1170,7 +1129,7 @@ class UpdateResult(NamedTuple):
         .. versionadded:: 2.1
 
         """
-        return self.value if not isinstance(self.value, Exception) else None
+        pass
 
     @property
     def error(self) -> UpdateError | None:
@@ -1191,11 +1150,7 @@ class UpdateResult(NamedTuple):
         .. versionadded:: 2.1
 
         """
-        if self.error:
-            return False
-        if not self.updated_feed:
-            return True
-        return not (self.updated_feed.new or self.updated_feed.modified)
+        pass
 
 
 class UpdateConfig(TypedDict, total=False):

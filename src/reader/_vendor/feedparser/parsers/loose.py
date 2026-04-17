@@ -39,13 +39,7 @@ class LooseXMLParser:
 
     @staticmethod
     def _normalize_attributes(kv):
-        k = kv[0].lower()
-        v = k in ("rel", "type") and kv[1].lower() or kv[1]
-        # the sgml parser doesn't handle entities in attributes, nor
-        # does it pass the attribute values through as unicode, while
-        # strict xml parsers do -- account for this difference
-        v = v.replace("&amp;", "&")
-        return k, v
+        pass
 
     def decode_entities(self, element, data):
         data = data.replace("&#60;", "&lt;")
@@ -72,4 +66,4 @@ class LooseXMLParser:
 
     @staticmethod
     def strattrs(attrs):
-        return "".join(' {}="{}"'.format(n, v.replace('"', "&quot;")) for n, v in attrs)
+        pass

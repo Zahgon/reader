@@ -59,13 +59,7 @@ def _json_dumps(thing: object) -> str:
 
 
 def _json_default(thing: object) -> Any:
-    try:
-        return _dataclass_dict(thing)
-    except TypeError:
-        pass
-    if isinstance(thing, datetime.datetime):
-        return thing.isoformat(timespec='microseconds')
-    raise TypeError(f"Object of type {type(thing).__name__} is not JSON serializable")
+    pass
 
 
 def _dataclass_dict(thing: object) -> dict[str, Any]:
@@ -76,22 +70,4 @@ def _dataclass_dict(thing: object) -> dict[str, Any]:
     # this way, json.dumps() does the recursion instead of asdict()
 
     # raises TypeError for non-dataclasses
-    fields = dataclasses.fields(thing)  # type: ignore[arg-type]
-    # ... but doesn't for dataclass *types*
-    if isinstance(thing, type):
-        raise TypeError("got type, expected instance")
-
-    exclude = getattr(thing, _EXCLUDE, ())
-
-    rv = {}
-    for field in fields:
-        if field.name in exclude:
-            continue
-
-        value = getattr(thing, field.name)
-        if value is None or not value and isinstance(value, Collection):
-            continue
-
-        rv[field.name] = value
-
-    return rv
+    pass

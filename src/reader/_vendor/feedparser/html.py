@@ -115,12 +115,7 @@ class BaseHTMLProcessor(sgmllib.SGMLParser):
         :type match: Match[str]
         :rtype: str
         """
-
-        tag = match.group(1)
-        if tag in self.elements_no_end_tag:
-            return "<" + tag + " />"
-        else:
-            return "<" + tag + "></" + tag + ">"
+        pass
 
     # By declaring these methods and overriding their compiled code
     # with the code from sgmllib, the original code will execute in
@@ -140,11 +135,7 @@ class BaseHTMLProcessor(sgmllib.SGMLParser):
     __parse_starttag.__code__ = sgmllib.SGMLParser.parse_starttag.__code__
 
     def parse_starttag(self, i):
-        j = self.__parse_starttag(i)
-        if self._type == "application/xhtml+xml":
-            if j > 2 and self.rawdata[j - 2 : j] == "/>":
-                self.unknown_endtag(self.lasttag)
-        return j
+        pass
 
     def feed(self, data):
         """
@@ -165,18 +156,7 @@ class BaseHTMLProcessor(sgmllib.SGMLParser):
         :type attrs: List[Tuple[str, str]]
         :rtype: List[Tuple[str, str]]
         """
-
-        if not attrs:
-            return attrs
-        # utility method to be called by descendants
-        # Collapse any duplicate attribute names and values by converting
-        # *attrs* into a dictionary, then convert it back to a list.
-        attrs_d = {k.lower(): v for k, v in attrs}
-        attrs = [
-            (k, k in ("rel", "type") and v.lower() or v) for k, v in attrs_d.items()
-        ]
-        attrs.sort()
-        return attrs
+        pass
 
     def unknown_starttag(self, tag, attrs):
         """
@@ -184,110 +164,56 @@ class BaseHTMLProcessor(sgmllib.SGMLParser):
         :type attrs: List[Tuple[str, str]]
         :rtype: None
         """
-
-        # Called for each start tag
-        # attrs is a list of (attr, value) tuples
-        # e.g. for <pre class='screen'>, tag='pre', attrs=[('class', 'screen')]
-        uattrs = []
-        strattrs = ""
-        if attrs:
-            for key, value in attrs:
-                value = value.replace(">", "&gt;")
-                value = value.replace("<", "&lt;")
-                value = value.replace('"', "&quot;")
-                value = self.bare_ampersand.sub("&amp;", value)
-                uattrs.append((key, value))
-            strattrs = "".join(f' {key}="{value}"' for key, value in uattrs)
-        if tag in self.elements_no_end_tag:
-            self.pieces.append(f"<{tag}{strattrs} />")
-        else:
-            self.pieces.append(f"<{tag}{strattrs}>")
+        pass
 
     def unknown_endtag(self, tag):
         """
         :type tag: str
         :rtype: None
         """
-
-        # Called for each end tag, e.g. for </pre>, tag will be 'pre'
-        # Reconstruct the original end tag.
-        if tag not in self.elements_no_end_tag:
-            self.pieces.append("</%s>" % tag)
+        pass
 
     def handle_charref(self, ref):
         """
         :type ref: str
         :rtype: None
         """
-
-        # Called for each character reference, e.g. '&#160;' will extract '160'
-        # Reconstruct the original character reference.
-        ref = ref.lower()
-        if ref.startswith("x"):
-            value = int(ref[1:], 16)
-        else:
-            value = int(ref)
-
-        if value in _cp1252:
-            self.pieces.append("&#%s;" % hex(ord(_cp1252[value]))[1:])
-        else:
-            self.pieces.append("&#%s;" % ref)
+        pass
 
     def handle_entityref(self, ref):
         """
         :type ref: str
         :rtype: None
         """
-
-        # Called for each entity reference, e.g. '&copy;' will extract 'copy'
-        # Reconstruct the original entity reference.
-        if ref in html.entities.name2codepoint or ref == "apos":
-            self.pieces.append("&%s;" % ref)
-        else:
-            self.pieces.append("&amp;%s" % ref)
+        pass
 
     def handle_data(self, text):
         """
         :type text: str
         :rtype: None
         """
-
-        # called for each block of plain text, i.e. outside of any tag and
-        # not containing any character or entity references
-        # Store the original text verbatim.
-        self.pieces.append(text)
+        pass
 
     def handle_comment(self, text):
         """
         :type text: str
         :rtype: None
         """
-
-        # Called for HTML comments, e.g. <!-- insert Javascript code here -->
-        # Reconstruct the original comment.
-        self.pieces.append("<!--%s-->" % text)
+        pass
 
     def handle_pi(self, text):
         """
         :type text: str
         :rtype: None
         """
-
-        # Called for each processing instruction, e.g. <?instruction>
-        # Reconstruct original processing instruction.
-        self.pieces.append("<?%s>" % text)
+        pass
 
     def handle_decl(self, text):
         """
         :type text: str
         :rtype: None
         """
-
-        # called for the DOCTYPE, if present, e.g.
-        # <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-        #     "http://www.w3.org/TR/html4/loose.dtd">
-        # Reconstruct original DOCTYPE
-        self.pieces.append("<!%s>" % text)
+        pass
 
     _new_declname_match = re.compile(r"[a-zA-Z][-_.a-zA-Z0-9:]*\s*").match
 
@@ -297,38 +223,21 @@ class BaseHTMLProcessor(sgmllib.SGMLParser):
         :type declstartpos: int
         :rtype: Tuple[Optional[str], int]
         """
-
-        rawdata = self.rawdata
-        n = len(rawdata)
-        if i == n:
-            return None, -1
-        m = self._new_declname_match(rawdata, i)
-        if m:
-            s = m.group()
-            name = s.strip()
-            if (i + len(s)) == n:
-                return None, -1  # end of buffer
-            return name.lower(), m.end()
-        else:
-            self.handle_data(rawdata)
-            # self.updatepos(declstartpos, i)
-            return None, -1
+        pass
 
     def convert_charref(self, name):
         """
         :type name: str
         :rtype: str
         """
-
-        return "&#%s;" % name
+        pass
 
     def convert_entityref(self, name):
         """
         :type name: str
         :rtype: str
         """
-
-        return "&%s;" % name
+        pass
 
     def output(self):
         """Return processed HTML as a single string.
@@ -343,10 +252,4 @@ class BaseHTMLProcessor(sgmllib.SGMLParser):
         :type i: int
         :rtype: int
         """
-
-        try:
-            return sgmllib.SGMLParser.parse_declaration(self, i)
-        except (AssertionError, sgmllib.SGMLParseError):
-            # Escape the doctype declaration and continue parsing.
-            self.handle_data("&lt;")
-            return i + 1
+        pass
